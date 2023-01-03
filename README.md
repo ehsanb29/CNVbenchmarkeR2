@@ -1,6 +1,6 @@
 # CNVbenchmarkeR2 #
 
-CNVbenchmarkeR2 is a framework to benchmark germline copy number variant (CNV) tools on different NGS datasets. Current version supports DECoN, CoNVaDING, panelcn.MOPS, ExomeDepth and CODEX2 tools.
+CNVbenchmarkeR2 is a framework to benchmark germline copy number variant (CNV) calling tools on different NGS datasets. Current version supports DECoN, CoNVaDING, panelcn.MOPS, ExomeDepth and CODEX2 tools.
 
 Previous version, CNVbenchmarkeR, is available [here] (https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR)
 
