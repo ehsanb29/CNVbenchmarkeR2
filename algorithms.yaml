@@ -4,4 +4,5 @@ algorithms:
   panelcn: true
   convading: true
   exomedepth: true
+  clincnv: true
   codex2: true

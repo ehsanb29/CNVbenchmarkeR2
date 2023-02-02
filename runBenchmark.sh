@@ -30,6 +30,11 @@ if [ "$pars_algorithms_codex2" == "true" ]; then
 	Rscript ./algorithms/codex2/runCodex2.r ./algorithms/codex2/codex2Params.yaml datasets.yaml  > logs/codex2.log 2>&1
 fi
 
+if [ "$pars_algorithms_clincnv" == "true" ]; then
+    echo "[$(date)] Executing ClinCNV"
+	Rscript ./algorithms/clincnv/runClincnv.r ./algorithms/clincnv/clincnvParams.yaml datasets.yaml  > logs/clincnv.log 2>&1
+fi
+
 if [ "$pars_algorithms_convading" == "true" ]; then
     echo "[$(date)] Executing CoNVaDING"
 	Rscript ./algorithms/convading/runConvading.r ./algorithms/convading/convadingParams.yaml datasets.yaml  > logs/convading.log 2>&1
