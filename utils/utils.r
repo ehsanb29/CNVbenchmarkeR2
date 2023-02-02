@@ -127,7 +127,8 @@ readCompatibleIndications = function(file){
 # geneSymbols: vector of gene symbols
 getExonsPositions = function(genesSymbols){
   suppressPackageStartupMessages(library("biomaRt"))
-  human <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl", host = "may2012.archive.ensembl.org")
+  human <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "hsapiens_gene_ensembl", host = "https://feb2014.archive.ensembl.org")
+  
   
   result <- list()
   for (gene in genesSymbols){
