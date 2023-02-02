@@ -26,7 +26,9 @@ for (dName in names(datasets)) {
 
     # Create SummaryStats object and load current dataset validated results
     ss <- SummaryStats()
-    ss$loadValidatedResults(dataset$validated_results_file, dName, dataset$bed_file)  
+    ss$loadValidatedResults(path = dataset$validated_results_file,
+                            datasetName = dName,
+                            bedFile = dataset$bed_file)  
 
     # Calculate metrics
     for (alg in names(algorithms)) {

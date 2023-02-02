@@ -34,8 +34,9 @@ SummaryStats <- setRefClass("SummaryStats",
                                   data <- subset(data, SampleID != "")[, 1:5]
                                   cascades <- auxReadCascades(path, idx)
                                   data <- transformToICRformat(data, cascades)
-                                } else   # ICR96 format
+                                } else{   # ICR96 format
                                   data <- read.csv(path, sep="\t", header=TRUE, stringsAsFactors = FALSE)
+                                }
                                 
                                 # add dataset
                                 datasets[[datasetName]] <<- getSamplesWithResults(data, bedFile)
@@ -176,14 +177,16 @@ SummaryStats <- setRefClass("SummaryStats",
 
                                       if (nrow(aux) > 0) {
                                         aux$cnvType <- cnvType
-                                      } else
+                                      } else {
                                         aux$cnvType <- character(0)
+                                      }
 
                                       # store it
                                       if (cnvType %in% c("Deletion", "Duplication")) {
                                         allGenePositives <- rbind(allGenePositives, aux)
-                                      } else
+                                      } else {
                                         allGeneNegatives <- rbind(allGeneNegatives, aux)
+                                      }
                                     }
 
                                     # if postive was found, other ROIs belonging to the gene without CNV have to be included as negative
