@@ -1,6 +1,6 @@
 # CNVbenchmarkeR2 #
 
-CNVbenchmarkeR2 is a framework to benchmark germline copy number variant (CNV) calling tools on different NGS datasets. Current version supports DECoN, CoNVaDING, panelcn.MOPS, ExomeDepth and CODEX2 tools.
+CNVbenchmarkeR2 is a framework to benchmark germline copy number variant (CNV) calling tools on different NGS datasets. Current version supports DECoN, CoNVaDING, panelcn.MOPS, ExomeDepth, CODEX2 and ClinCNV tools.
 
 Previous version, CNVbenchmarkeR, is available [here] (https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR)
 
@@ -14,6 +14,7 @@ Algorithms have to be properly installed. Links for algorithms installation:
 - https://github.com/RahmanTeam/DECoN
 - https://github.com/yuchaojiang/CODEX2
 - https://cran.r-project.org/web/packages/ExomeDepth/index.html
+- https://github.com/imgag/ClinCNV
 
 
 ### How to use
@@ -22,7 +23,7 @@ Algorithms have to be properly installed. Links for algorithms installation:
 git clone https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2 
 ```
 
-2. **Configure algorithms.yaml** to set which algortithms will be benchmarked. In case of executing DECoN, modify algorithms/decon/deconParams.yaml by setting deconFolder to your DECoN folder installation. In case of executing CoNVaDING, modify algorithms/convading/convadingParams.yaml by setting convadingFolder param.
+2. **Configure algorithms.yaml** to set which algortithms will be benchmarked. In case of executing DECoN, modify algorithms/decon/deconParams.yaml by setting deconFolder to your DECoN folder installation. In case of executing CoNVaDING, modify algorithms/convading/convadingParams.yaml by setting convadingFolder param. ClinCNV also needs setting ngsbits and ClinCNV folders.
 
 3. **Configure datasets.yaml** to define against which datasets the algorithms will be executed. Within this file, it is important to provide files with the exact expected format (**special attention** to `validated_results_file` and `bed_file` that are **tab-delimited** files). To do so, please **check the [examples](https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2/tree/master/examples) folder**.
 
