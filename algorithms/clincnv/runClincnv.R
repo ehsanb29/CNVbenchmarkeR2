@@ -16,12 +16,6 @@ if(length(args)>0) {
 }
 
 
-# translates DEL/DUP into a common format
-auxCNname <- function(x) {
-  if (x %in% c("CN0", "CN1")) return("deletion") 
-  else if (x %in% c("CN3", "CN4")) return("duplication")
-}
-
 #Load the parameters file  
 params <- yaml.load_file(clincnvParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
