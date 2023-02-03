@@ -77,7 +77,7 @@ SummaryStats <- setRefClass("SummaryStats",
                                   rows <- subset(data, SampleID == id)
                                   currentCascade <- cascades[rows[1, "Indication"], "Genes"]
                                   currentGenes <- strsplit(currentCascade, ", ")[[1]]
-
+                                  
                                   for (gene in currentGenes){
                                     exonsPositions <- exonsPositionsByGene[[gene]]
 
@@ -252,11 +252,14 @@ SummaryStats <- setRefClass("SummaryStats",
                                 samples <- datasets[[datasetName]]
                                 resultsFile <- file.path(outputFolder, "grPositives.rds")
                                 grPositives <- readRDS(resultsFile)
-
+                                GenomeInfoDb::seqlevelsStyle(grPositives) <- "Ensembl"  # removes "chr" for chromosomes
+                                
+                                
                                 # Fix failedRois: translate them into ROIs of bed file
                                 if (nrow(failedROIsData) > 0 ){
                                   fixedFailedRois <- data.frame()
                                   failedROIsGR <- GRanges(seqnames = failedROIsData$Chr, ranges = IRanges(start=failedROIsData$Start, end=failedROIsData$End))
+                                  GenomeInfoDb::seqlevelsStyle(failedROIsGR) <- "Ensembl"  # removes "chr" for chromosomes
                                   mcols(failedROIsGR)$sample <- failedROIsData$SampleID
                                   for (sample in unique(failedROIsData$SampleID)){
                                     failed <- failedROIsGR[mcols(failedROIsGR)[,"sample"] == sample ]
@@ -275,7 +278,7 @@ SummaryStats <- setRefClass("SummaryStats",
                                 # Fix found positives: translate them into ROIs of bed file
                                 fixedPositives <- data.frame()
                                 for (sample in unique(mcols(grPositives)[, "sample"])){
-
+                                  
                                   for (cnvType in c("deletion", "duplication")){
                                     positives <- grPositives[mcols(grPositives)[,"sample"] == sample & mcols(grPositives)[,"cnvType"] == cnvType]
                                     overlaps <- countOverlaps(bedDataGR, positives, type = "any")
@@ -291,7 +294,6 @@ SummaryStats <- setRefClass("SummaryStats",
 
                                 # extract sample names
                                 sampleIds <- unique(fixedPositives$sample)
-
 
                                 # build Sample object for each sample name
                                 for (s in samples){
