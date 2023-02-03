@@ -35,7 +35,10 @@ for (dName in names(datasets)) {
       useAlg <- algorithms[[alg]]
       if (useAlg){
         outputFolder <- file.path(getwd(), "output", paste0(alg, "-", dName))
-        ss$loadAlgorithmResults(outputFolder, alg, dName, dataset$bed_file)
+        ss$loadAlgorithmResults(outputFolder = outputFolder,
+                                algorithmName = alg,
+                                datasetName = dName,
+                                bedFile = dataset$bed_file)
       }
     }
     
