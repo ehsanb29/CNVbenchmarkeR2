@@ -22,11 +22,6 @@ auxCNname <- function(x) {
   else if (x %in% c("CN3", "CN4")) return("duplication")
 }
 
-# TO REMOVE
-#clincnvParamsFile <- "algorithms/clincnv/clincnvParams.yaml"
-#datasetsParamsFile <- "datasets.yaml"
-
-
 #Load the parameters file  
 params <- yaml.load_file(clincnvParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
