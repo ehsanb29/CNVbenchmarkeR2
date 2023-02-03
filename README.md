@@ -16,6 +16,7 @@ Algorithms have to be properly installed. Links for algorithms installation:
 - https://cran.r-project.org/web/packages/ExomeDepth/index.html
 - https://github.com/imgag/ClinCNV
 
+Also, R/Bioconductor should be installed with at least this packages: GenomicRanges, biomaRt.
 
 ### How to use
 1. Get Code
