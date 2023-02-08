@@ -24,15 +24,15 @@ Also, R/Bioconductor should be installed with at least this packages: GenomicRan
 git clone https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2 
 ```
 
-2. **Configure algorithms.yaml** to set which algortithms will be benchmarked. In case of executing DECoN, modify algorithms/decon/deconParams.yaml by setting deconFolder to your DECoN folder installation. In case of executing CoNVaDING, modify algorithms/convading/convadingParams.yaml by setting convadingFolder param. ClinCNV also needs setting ngsbits and ClinCNV folders.
+2. **Configure tools.yaml** to set which algortithms will be benchmarked. In case of executing DECoN, modify tools/decon/deconParams.yaml by setting deconFolder to your DECoN folder installation. In case of executing CoNVaDING, modify tools/convading/convadingParams.yaml by setting convadingFolder param. ClinCNV also needs setting ngsbits and ClinCNV folders.
 
-3. **Configure datasets.yaml** to define against which datasets the algorithms will be executed. Within this file, it is important to provide files with the exact expected format (**special attention** to `validated_results_file` and `bed_file` that are **tab-delimited** files). To do so, please **check the [examples](https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2/tree/master/examples) folder**.
+3. **Configure datasets.yaml** to define against which datasets the tools will be executed. Within this file, it is important to provide files with the exact expected format (**special attention** to `validated_results_file` and `bed_file` that are **tab-delimited** files). To do so, please **check the [examples](https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2/tree/master/examples) folder**.
 
 
 4. Launch CNVbenchmarker
 ```
 cd CNVbenchmarkerR
-./runBenchmark.sh
+Rscript runBenchmark.R [-t tools_file] [-d datasets_file]
 ```
 
 
@@ -42,7 +42,7 @@ A summary file and a .csv results file will be generated at output/summary folde
 
 Stats are calculated per ROI, per gene and at whole strategy level (gene level including no-calls, i. e., low quality regions)
 
-Logs files will be generated at logs folder. Output for each algorithm and dataset will be generated at output folder.
+Logs files will be generated at logs folder. Output for each tool and dataset will be generated at output folder.
 
 
 ### Troubleshooting  ###
@@ -55,8 +55,8 @@ Two important checks to ensure that metrics are computed correctly:
 
 ## Extra feature: optimizer ##
 
-An optimizer is also attached in the framework. It executes a CNV calling algorithm against a dataset with many different values for each param.
-Up to 22 values are evaluated for each param. It is implemented using a greedy algorithm which starts from each different param. The CNV algorithm will be executed a maximum of (n_params^2)\*22 times. 
+An optimizer is also attached in the framework. It executes a CNV calling tool against a dataset with many different values for each param.
+Up to 22 values are evaluated for each param. It is implemented using a greedy algorithm which starts from each different param. The CNV tool will be executed a maximum of (n_params^2)\*22 times. 
 
 It will be improve sensitivity allowing drops of specificity defined at optimizerParams.yaml.
 
@@ -67,7 +67,7 @@ An SGE cluster system has to be available.
 
 ### How to use
 
-1. Configure optimizers/optimizerParams.yaml by defining optimizer params, dataset and algorithm to be optimized. Note: it is recommended to optimize over a random subset (training subset) of the original subset. Then, performance can be compared on the validation subset.
+1. Configure optimizers/optimizerParams.yaml by defining optimizer params, dataset and tool to be optimized. Note: it is recommended to optimize over a random subset (training subset) of the original subset. Then, performance can be compared on the validation subset.
 2. Execute optimizer:
 ```
 cd optimizers
