@@ -7,7 +7,7 @@ Previous version, CNVbenchmarkeR, is available [here] (https://github.com/Transl
 
 ### Prerequisites ###
 
-Algorithms have to be properly installed. Links for algorithms installation:
+Tools should be properly installed. Links for tools installation:
 
 - https://github.com/bioinf-jku/panelcn.mops
 - https://molgenis.gitbooks.io/convading/
@@ -24,7 +24,7 @@ Also, R/Bioconductor should be installed with at least this packages: GenomicRan
 git clone https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2 
 ```
 
-2. **Configure tools.yaml** to set which algortithms will be benchmarked. In case of executing DECoN, modify tools/decon/deconParams.yaml by setting deconFolder to your DECoN folder installation. In case of executing CoNVaDING, modify tools/convading/convadingParams.yaml by setting convadingFolder param. ClinCNV also needs setting ngsbits and ClinCNV folders.
+2. **Configure tools.yaml** to set which tools will be benchmarked. In case of executing DECoN, modify tools/decon/deconParams.yaml by setting deconFolder to your DECoN folder installation. In case of executing CoNVaDING, modify tools/convading/convadingParams.yaml by setting convadingFolder param. ClinCNV also needs setting ngsbits and ClinCNV folders.
 
 3. **Configure datasets.yaml** to define against which datasets the tools will be executed. Within this file, it is important to provide files with the exact expected format (**special attention** to `validated_results_file` and `bed_file` that are **tab-delimited** files). To do so, please **check the [examples](https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2/tree/master/examples) folder**.
 
