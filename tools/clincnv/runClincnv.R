@@ -74,7 +74,7 @@ for (name in names(datasets)) {
                  "--normal", coverageFile, "--out", outputFolder, 
                  "--bed", dataset$annotated_bed_file, "--scoreG", params$scoreG,
                  "--minimumNumOfElemsInCluster", params$minimumNumOfElemsInCluster,
-                 "--lengthG 0 --numberOfThreads 2 --reanalyseCohort")
+                 "--numberOfThreads", params$threads, "--lengthG 0 --reanalyseCohort")
     system(cmd)
     
     
