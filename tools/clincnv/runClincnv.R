@@ -30,12 +30,7 @@ for (name in names(datasets)) {
   dataset <- datasets[[name]]
   if (dataset$include){
     print(paste("Starting ClinCNV for", name, "dataset", sep=" "))
-    
-    # extract fields
-    bamsDir <- file.path(dataset$bams_dir)
-    bedFile <- file.path(dataset$bed_file)
-    fastaFile <- file.path(dataset$fasta_file)
-    
+
     # Create output folder
     if (!is.null(params$outputFolder)) {
       outputFolder <- params$outputFolder
@@ -98,9 +93,34 @@ for (name in names(datasets)) {
     }
     names(cnvData) <- c("chr","start","end","CN_change","loglikelihood","no_of_regions","length_KB",
                         "potential_AF","genes","qvalue", "Sample")
-    cnvData$CNV.type <- ifelse(cnvData$CN_change < 2, "deletion", "duplication") # assign common values
+    
+    # assign common values for CNV type
+    cnvData$CNV.type <- ifelse(cnvData$CN_change < 2, "deletion", "duplication") 
+    
+    # Split multi-gene CNVs in multiple lines
+    bedGR <- regioneR::toGRanges(dataset$bed_file)
+    cnvDataMultiGene <- setNames(data.frame(matrix(ncol = ncol(cnvData), nrow = 0)), names(cnvData))
+    for (i in seq_len(nrow(cnvData))){
+      
+      # get each CNV and check which ROIs overlaps
+      cnv <- cnvData[i,]
+      cnvGR <- regioneR::toGRanges(cnv)
+      GenomeInfoDb::seqlevelsStyle(cnvGR) <- "Ensembl"  # removes "chr" for chromosomes
+      res <- as.data.frame(IRanges::subsetByOverlaps(bedGR, cnvGR))
+      
+      # add a line for each gene
+      for (gene in unique(res$name)) {
+        cnvToAdd <- cnvData[i,]
+        cnvToAdd$genes <- gene
+        cnvToAdd$start <- res[res$name == gene, "start"][1] - 1
+        cnvToAdd$end <- tail(res[res$name == gene, "end"], n = 1)
+        cnvDataMultiGene <- rbind(cnvDataMultiGene, cnvToAdd)
+      }
+    }
+    
+    # Write final CNV results file
     finalSummaryFile <- file.path(outputFolder, "cnvs_summary.tsv")
-    write.table(cnvData, finalSummaryFile, sep = "\t", quote = F, row.names = F)
+    write.table(cnvDataMultiGene, finalSummaryFile, sep = "\t", quote = F, row.names = F)
     
     # Save results in GRanges format
     message("Saving CNV GenomicRanges results")
