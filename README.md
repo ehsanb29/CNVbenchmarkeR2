@@ -2,7 +2,7 @@
 
 CNVbenchmarkeR2 is a framework to benchmark germline copy number variant (CNV) calling tools on different NGS datasets. Current version supports DECoN, CoNVaDING, panelcn.MOPS, ExomeDepth, CODEX2 and ClinCNV tools.
 
-Previous version, CNVbenchmarkeR, is available [here] (https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR)
+Previous version, CNVbenchmarkeR, is available [here](https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR).
 
 
 ### Prerequisites ###
@@ -16,22 +16,22 @@ Tools should be properly installed. Links for tools installation:
 - https://cran.r-project.org/web/packages/ExomeDepth/index.html
 - https://github.com/imgag/ClinCNV
 
-Also, R/Bioconductor should be installed with at least this packages: GenomicRanges, biomaRt.
+Also, R/Bioconductor should be installed with at least this packages: GenomicRanges, biomaRt, regioneR.
 
 ### How to use
 1. Get Code
 ```
-git clone https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2 
+git clone https://github.com/jpuntomarcos/CNVbenchmarkeR2 
 ```
 
 2. **Configure tools.yaml** to set which tools will be benchmarked. In case of executing DECoN, modify tools/decon/deconParams.yaml by setting deconFolder to your DECoN folder installation. In case of executing CoNVaDING, modify tools/convading/convadingParams.yaml by setting convadingFolder param. ClinCNV also needs setting ngsbits and ClinCNV folders.
 
-3. **Configure datasets.yaml** to define against which datasets the tools will be executed. Within this file, it is important to provide files with the exact expected format (**special attention** to `validated_results_file` and `bed_file` that are **tab-delimited** files). To do so, please **check the [examples](https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR2/tree/master/examples) folder**.
+3. **Configure datasets.yaml** to define against which datasets the tools will be executed. Within this file, it is important to provide files with the exact expected format (**special attention** to `validated_results_file` and `bed_file` that are **tab-delimited** files). To do so, please **check the [examples](https://github.com/jpuntomarcos/CNVbenchmarkeR2/tree/master/examples) folder**.
 
 
-4. Launch CNVbenchmarker
+4. Launch CNVbenchmarkeR2
 ```
-cd CNVbenchmarkerR
+cd CNVbenchmarkerR2
 Rscript runBenchmark.R [-t tools_file] [-d datasets_file]
 ```
 
