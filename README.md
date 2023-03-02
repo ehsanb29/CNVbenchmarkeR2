@@ -32,7 +32,7 @@ git clone https://github.com/jpuntomarcos/CNVbenchmarkeR2
 4. Launch CNVbenchmarkeR2
 ```
 cd CNVbenchmarkerR2
-Rscript runBenchmark.R [-t tools_file] [-d datasets_file]
+Rscript runBenchmark.R [-t tools_file] [-d datasets_file] 
 ```
 
 
