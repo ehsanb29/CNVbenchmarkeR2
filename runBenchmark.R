@@ -13,11 +13,11 @@ if (length(list.files(pattern = "runBenchmark.R"))== 0){
 
 # Build options list
 option_list <- list(
-  make_option(c("-t", "--tools"), type="character", default="tools.yaml", 
+  make_option(c("-t", "--tools"), type="character", default="tools.yaml",
               help="Path to tools file (yaml)", metavar="character"),
-  make_option(c("-d", "--datasets"), type="character", default="datasets.yaml", 
+  make_option(c("-d", "--datasets"), type="character", default="datasets.yaml",
               help="Path to datasets file (yaml)", metavar="character")
-); 
+);
 opt_parser <- OptionParser(option_list=option_list);
 
 # Load params
@@ -73,6 +73,20 @@ if (tools$clincnv == T){
   cmd <- paste("Rscript tools/convading/runConvading.r tools/convading/convadingParams.yaml", args$datasets, " > logs/convading.log 2>&1")
   system(cmd)
 }
+# Cobalt
+if (tools$cobalt == T){
+  cat(as.character(Sys.time()), " - Executing Cobalt\n")
+  cmd <- paste("Rscript tools/cobalt/runCobalt.r tools/cobalt/cobaltParams.yaml", args$datasets, " > logs/cobalt.log 2>&1")
+  system(cmd)
+}
+
+# ClearCNV
+if (tools$clearCNV == T){
+  cat(as.character(Sys.time()), " - Executing clearCNV\n")
+  cmd <- paste("Rscript tools/clearCNV/runClearCNV.r tools/clearCNV/clearCNVParams.yaml", args$datasets, " > logs/clearCNV.log 2>&1")
+  system(cmd)
+}
+
 
 ##  Generate summary file  ##
 

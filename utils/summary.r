@@ -1,5 +1,5 @@
 # Generates summary file
-#USAGE: Rscript summary.r [algortihms_params_file] [datasets_params_file]
+#USAGE: Rscript summary.r [tools_params_file] [datasets_params_file]
 source(if (basename(getwd()) == "utils") "cnvStats.r" else "utils/cnvStats.r") # Load class definitions
 suppressPackageStartupMessages(library(yaml))
 
