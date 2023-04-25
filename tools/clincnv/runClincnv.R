@@ -21,6 +21,11 @@ params <- yaml.load_file(clincnvParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
+
+condaFolder <-file.path(params$condaFolder)
+print(condaFolder)
+environmentName <- file.path(params$environmentName)
+ngsbitsFolder <- file.path(params$ngsbitsFolder)
 # get clincnv folder
 clincnvFolder <- file.path(params$clincnvFolder)
 
@@ -50,8 +55,16 @@ for (name in names(datasets)) {
       fullBamFile <- file.path(dataset$bams_dir, f)
       sampleName <- tools::file_path_sans_ext(f)
       fullOntargetFile <- file.path(ontargetFolder, paste0(sampleName, ".cov"))
-      cmd <- paste(file.path(params$ngsbitsFolder, "BedCoverage"), '-bam', fullBamFile,
-                   '-in', dataset$annotated_bed_file, '-decimals 4 -out ', fullOntargetFile)
+      
+      cmd <- paste(condaFolder,
+                   "run -n", environmentName,
+                   file.path(ngsbitsFolder, 'BedCoverage'),
+                   '-bam', fullBamFile,
+                   '-in', dataset$annotated_bed_file, 
+                   '-decimals 4 -out ', 
+                   fullOntargetFile)
+      print(cmd)
+      
       system(cmd)
     }
     
@@ -62,7 +75,7 @@ for (name in names(datasets)) {
     coverageFile <- file.path(outputFolder, "coverage.cov")
     for (f in covFiles){
       sampleName <- tools::file_path_sans_ext(basename(f))
-      covData[sampleName] <-  read.table(f, stringsAsFactors = F)[6]
+      covData[sampleName] <-  read.table(f, stringsAsFactors = F)[4]
     }
     write.table(covData, coverageFile, sep = "\t", row.names = F, quote = F)
     

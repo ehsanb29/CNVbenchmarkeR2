@@ -1,5 +1,8 @@
-clincnvFolder: /root/programs/ClinCNV
-ngsbitsFolder: /root/programs/NGSbits/ngs-bits/bin
+clincnvFolder: /home/croca/ClinCNV
+ngsbitsFolder: /home/croca/.conda/envs/ngs-bits/bin
+#/home/croca/ngs-bits/bin
+condaFolder: /usr/local/opt/anaconda-2022.05/condabin/conda
+environmentName: ngs-bits
 
 # default values
 scoreG: 20  # sensitivity and specificity balance
