@@ -1,6 +1,8 @@
 # Description: Run the benchmark analysis
 # USAGE: Rscript runBenchmark.R [-t tools_file] [-d datasets_file]
 
+install.packages("yaml")
+install.packages("optparse")
 # libs
 library("optparse")
 library(yaml)
@@ -47,14 +49,14 @@ if (tools$decon == T){
 }
 
 # ExomeDepth
-if (tools$panelcn == T){
+if (tools$exomedepth == T){
   cat(as.character(Sys.time()), " - Executing ExomeDepth\n")
   cmd <- paste("Rscript tools/exomedepth/runExomedepth.r tools/exomedepth/exomedepthParams.yaml", args$datasets, " > logs/exomedepth.log 2>&1")
   system(cmd)
 }
 
 # CODEX2
-if (tools$panelcn == T){
+if (tools$codex2 == T){
   cat(as.character(Sys.time()), " - Executing CODEX2\n")
   cmd <- paste("Rscript tools/codex2/runCodex2.r tools/codex2/codex2Params.yaml", args$datasets, " > logs/codex2.log 2>&1")
   system(cmd)
@@ -86,6 +88,29 @@ if (tools$clearCNV == T){
   cmd <- paste("Rscript tools/clearCNV/runClearCNV.r tools/clearCNV/clearCNVParams.yaml", args$datasets, " > logs/clearCNV.log 2>&1")
   system(cmd)
 }
+
+# Cnvkit
+if (tools$cnvkit == T){
+  cat(as.character(Sys.time()), " - Executing cnvkit\n")
+  cmd <- paste("Rscript tools/cnvkit/runCnvkit.r tools/cnvkit/cnvkitParams.yaml", args$datasets, " > logs/cnvkit.log 2>&1")
+  system(cmd)
+}
+
+# GermlineCNVcaller
+if (tools$germlineCNVcaller == T){
+  cat(as.character(Sys.time()), " - Executing germlineCNVcaller\n")
+  cmd <- paste("Rscript tools/germlineCNVcaller/runGermlinecnvcaller.r tools/germlineCNVcaller/germlinecnvcallerParams.yaml", args$datasets, " > logs/germlineCNVcaller.log 2>&1")
+  system(cmd)
+}
+
+# AtlasCNV
+if (tools$atlasCNV == T){
+  cat(as.character(Sys.time()), " - Executing Atlas-CNV\n")
+  cmd <- paste("Rscript tools/atlasCNV/runAtlascnv.r tools/atlasCNV/atlasCNVParams.yaml", args$datasets, " > logs/atlasCNV.log 2>&1")
+  system(cmd)
+}
+
+
 
 
 ##  Generate summary file  ##
