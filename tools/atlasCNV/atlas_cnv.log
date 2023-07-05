@@ -1,0 +1,174 @@
+ExonQC threshold based on 99% of sd distribution is:  NA 
+CNV Exon threshold del/dup:  -0.6 ,  0.4 
+  Prob_gt_t
+1         0
+
+vie 30 jun 2023 12:27:28 CEST
+#---------------------------
+config: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/config
+panel: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_ROIs_ICR96_panelcnDataset_exonTarget.txt
+sample: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_cnv.sample
+CNV threshold_del: defaults used, as none provided by user.
+CNV threshold_dup: defaults used, as none provided by user.
+ExonQC threshold based on 99% of sd distribution is:  NA 
+CNV Exon threshold del/dup:  -0.6 ,  0.4 
+  Prob_gt_t
+1         0
+Failed to run atlas_cnv.R on run1/RPKM_matrix.run1.
+Failed to copy run1/s17316.cnv to s17316/CNV/.
+Failed to copy run1/s17316.pdf to s17316/CNV/.
+Failed to copy run1/s17314.cnv to s17314/CNV/.
+Failed to copy run1/s17314.pdf to s17314/CNV/.
+Failed to copy run1/s17317.cnv to s17317/CNV/.
+Failed to copy run1/s17317.pdf to s17317/CNV/.
+Failed to copy run1/s17333.cnv to s17333/CNV/.
+Failed to copy run1/s17333.pdf to s17333/CNV/.
+Failed to copy run1/s17309.cnv to s17309/CNV/.
+Failed to copy run1/s17309.pdf to s17309/CNV/.
+Failed to copy run1/s17320.cnv to s17320/CNV/.
+Failed to copy run1/s17320.pdf to s17320/CNV/.
+Failed to copy run1/s17334.cnv to s17334/CNV/.
+Failed to copy run1/s17334.pdf to s17334/CNV/.
+Failed to copy run1/s17308.cnv to s17308/CNV/.
+Failed to copy run1/s17308.pdf to s17308/CNV/.
+Failed to copy run1/s17313.cnv to s17313/CNV/.
+Failed to copy run1/s17313.pdf to s17313/CNV/.
+Failed to copy run1/s17311.cnv to s17311/CNV/.
+Failed to copy run1/s17311.pdf to s17311/CNV/.
+Failed to copy run1/s17310.cnv to s17310/CNV/.
+Failed to copy run1/s17310.pdf to s17310/CNV/.
+Failed to copy run1/s17312.cnv to s17312/CNV/.
+Failed to copy run1/s17312.pdf to s17312/CNV/.
+Failed to copy run1/s17319.cnv to s17319/CNV/.
+Failed to copy run1/s17319.pdf to s17319/CNV/.
+Failed to copy run1/s17315.cnv to s17315/CNV/.
+Failed to copy run1/s17315.pdf to s17315/CNV/.
+Failed to copy run1/s17306.cnv to s17306/CNV/.
+Failed to copy run1/s17306.pdf to s17306/CNV/.
+Failed to copy run1/s17307.cnv to s17307/CNV/.
+Failed to copy run1/s17307.pdf to s17307/CNV/.
+
+vie 30 jun 2023 12:28:09 CEST
+#---------------------------
+config: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/config
+panel: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_ROIs_ICR96_panelcnDataset_exonTarget.txt
+sample: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_cnv.sample
+CNV threshold_del: defaults used, as none provided by user.
+CNV threshold_dup: defaults used, as none provided by user.
+
+vie 30 jun 2023 12:28:19 CEST
+#---------------------------
+config: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/config
+panel: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_ROIs_ICR96_panelcnDataset_exonTarget.txt
+sample: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_cnv.sample
+CNV threshold_del: defaults used, as none provided by user.
+CNV threshold_dup: defaults used, as none provided by user.
+Failed to run atlas_cnv.R on run1/RPKM_matrix.run1.
+Failed to copy run1/s17320.cnv to s17320/CNV/.
+Failed to copy run1/s17320.pdf to s17320/CNV/.
+Failed to copy run1/s17313.cnv to s17313/CNV/.
+Failed to copy run1/s17313.pdf to s17313/CNV/.
+Failed to copy run1/s17317.cnv to s17317/CNV/.
+Failed to copy run1/s17317.pdf to s17317/CNV/.
+Failed to copy run1/s17333.cnv to s17333/CNV/.
+Failed to copy run1/s17333.pdf to s17333/CNV/.
+Failed to copy run1/s17316.cnv to s17316/CNV/.
+Failed to copy run1/s17316.pdf to s17316/CNV/.
+Failed to copy run1/s17319.cnv to s17319/CNV/.
+Failed to copy run1/s17319.pdf to s17319/CNV/.
+Failed to copy run1/s17311.cnv to s17311/CNV/.
+Failed to copy run1/s17311.pdf to s17311/CNV/.
+Failed to copy run1/s17307.cnv to s17307/CNV/.
+Failed to copy run1/s17307.pdf to s17307/CNV/.
+Failed to copy run1/s17312.cnv to s17312/CNV/.
+Failed to copy run1/s17312.pdf to s17312/CNV/.
+Failed to copy run1/s17315.cnv to s17315/CNV/.
+Failed to copy run1/s17315.pdf to s17315/CNV/.
+Failed to copy run1/s17308.cnv to s17308/CNV/.
+Failed to copy run1/s17308.pdf to s17308/CNV/.
+Failed to copy run1/s17306.cnv to s17306/CNV/.
+Failed to copy run1/s17306.pdf to s17306/CNV/.
+Failed to copy run1/s17314.cnv to s17314/CNV/.
+Failed to copy run1/s17314.pdf to s17314/CNV/.
+Failed to copy run1/s17309.cnv to s17309/CNV/.
+Failed to copy run1/s17309.pdf to s17309/CNV/.
+Failed to copy run1/s17310.cnv to s17310/CNV/.
+Failed to copy run1/s17310.pdf to s17310/CNV/.
+Failed to copy run1/s17334.cnv to s17334/CNV/.
+Failed to copy run1/s17334.pdf to s17334/CNV/.
+
+vie 30 jun 2023 12:35:25 CEST
+#---------------------------
+config: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/config
+panel: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_ROIs_ICR96_panelcnDataset_exonTarget.txt
+sample: /home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_cnv.sample
+CNV threshold_del: defaults used, as none provided by user.
+CNV threshold_dup: defaults used, as none provided by user.
+Fatal error: cannot open file '/home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_cnv.R': No such file or directory
+Fatal error: cannot open file '/home/croca/BRPLAB/Benchmark/Atlas-CNV-master/atlas_cnv.R': No such file or directory
+
+vie 30 jun 2023 12:51:23 CEST
+#---------------------------
+config: /home/croca/BRPLAB/Benchmark/Atlas-CNV/config
+panel: /home/croca/BRPLAB/Benchmark/Atlas-CNV/atlas_ROIs_ICR96_panelcnDataset_exonTarget.txt
+sample: /home/croca/BRPLAB/Benchmark/Atlas-CNV/atlas_cnv.sample
+CNV threshold_del: defaults used, as none provided by user.
+CNV threshold_dup: defaults used, as none provided by user.
+ExonQC threshold based on 99% of sd distribution is:  NA 
+CNV Exon threshold del/dup:  -0.6 ,  0.4 
+  Prob_gt_t
+1         0
+Calling dels on: s17312 has cnv dels.
+Calling dups on: s17312 has cnv dups.
+Calling dels on: s17308 has cnv dels.
+Calling dups on: s17308 has no cnv dups.
+Calling dels on: s17310 has cnv dels.
+Calling dups on: s17310 has cnv dups.
+Calling dels on: s17317 has cnv dels.
+Calling dups on: s17317 has cnv dups.
+Calling dels on: s17309 has cnv dels.
+Calling dups on: s17309 has cnv dups.
+Calling dels on: s17319 has cnv dels.
+Calling dups on: s17319 has cnv dups.
+Calling dels on: s17306 has cnv dels.
+Calling dups on: s17306 has no cnv dups.
+Calling dels on: s17307 has cnv dels.
+Calling dups on: s17307 has cnv dups.
+Gene plot for sample:  s17307 using gene pattern:  DICER1 
+Calling dels on: s17315 has cnv dels.
+Calling dups on: s17315 has cnv dups.
+Calling dels on: s17334 has no cnv dels.
+Calling dups on: s17334 has cnv dups.
+Calling dels on: s17333 has cnv dels.
+Calling dups on: s17333 has cnv dups.
+Calling dels on: s17311 has cnv dels.
+Calling dups on: s17311 has cnv dups.
+Calling dels on: s17314 has cnv dels.
+Calling dups on: s17314 has cnv dups.
+Calling dels on: s17320 has cnv dels.
+Calling dups on: s17320 has no cnv dups.
+Calling dels on: s17316 has cnv dels.
+Calling dups on: s17316 has cnv dups.
+Calling dels on: s17313 has cnv dels.
+Calling dups on: s17313 has no cnv dups.
+[1] "hey garbage"
+null device null device null device null device null device null device 
+          1           1           1           1           1           1 
+null device null device null device null device null device null device 
+          1           1           1           1           1           1 
+null device null device null device null device 
+          1           1           1           1 
+
+vie 30 jun 2023 16:55:42 CEST
+#---------------------------
+No config provided: . Looking for a config file in CWD or in atlas_cnv dir.
+Found config: /home/croca/BRPLAB/Benchmark/Atlas-CNV/config
+No panel design file provided: . Looking for panel design file in atlas_cnv dir.
+No panel design file, exiting.
+
+vie 30 jun 2023 16:59:06 CEST
+#---------------------------
+No config provided: . Looking for a config file in CWD or in atlas_cnv dir.
+Found config: /home/croca/BRPLAB/Benchmark/Atlas-CNV/config
+No panel design file provided: . Looking for panel design file in atlas_cnv dir.
+No panel design file, exiting.
