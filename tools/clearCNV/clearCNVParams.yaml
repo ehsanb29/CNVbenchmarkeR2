@@ -1,6 +1,4 @@
-clearCNVFolder: "/home/emunte/miniconda3/envs/clearcnv/bin/clearCNV"
-condaFolder: "/home/emunte/miniconda3/condabin/conda"
-environmentName: clearcnv
+clearCNVFolder: ~/clearcnv/bin/activate
 # default values
 cores: 20
 expected_artefacts: 0.02
