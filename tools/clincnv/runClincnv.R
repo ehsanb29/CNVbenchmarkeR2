@@ -35,7 +35,7 @@ for (name in names(datasets)) {
   dataset <- datasets[[name]]
   if (dataset$include){
     print(paste("Starting ClinCNV for", name, "dataset", sep=" "))
-
+    
     # Create output folder
     if (!is.null(params$outputFolder)) {
       outputFolder <- params$outputFolder
@@ -88,6 +88,7 @@ for (name in names(datasets)) {
                  "--bed", dataset$annotated_bed_file, "--scoreG", params$scoreG,
                  "--minimumNumOfElemsInCluster", params$minimumNumOfElemsInCluster,
                  "--numberOfThreads", params$threads, "--lengthG 0 --reanalyseCohort")
+    print(cmd)
     system(cmd)
     
     
