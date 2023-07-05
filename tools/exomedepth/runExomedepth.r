@@ -14,7 +14,7 @@ auxGetGene <- function(bedData, chr, pos){
   else
     return(gene)
 }
-  
+
 
 # Process ExomeDepth alg. body
 processExomedepthBody <- function(testCountsDF, controlCountsDF, countsDef, params){
@@ -37,20 +37,24 @@ processExomedepthBody <- function(testCountsDF, controlCountsDF, countsDef, para
                                       n.bins.reduced = 10000,
                                       phi.bins = params$phi.bins)
     controls = apply(X = as.matrix(controlCounts[, references$reference.choice]), MAR=1, FUN=sum)
-
+    
+    
+    
     
     # call cnvs
     all_exons = new('ExomeDepth',
                     test = testCounts,
                     reference = controls,
                     formula = 'cbind(test, reference) ~ 1')
+    
     all_exons = CallCNVs(x = all_exons,
                          transition.probability = params$transition.probability,
                          expected.CNV.length = params$expected.CNV.length,
-                         chromosome = countsDef$space,
+                         chromosome = countsDef$chromosome, #space
                          start = countsDef$start,
                          end = countsDef$end,
-                         name = countsDef$names)
+                         name = countsDef$exon)
+    
     
     if (nrow(all_exons@CNV.calls) > 0){
       # add sample column: remove first char "X"
@@ -69,6 +73,7 @@ processExomedepthBody <- function(testCountsDF, controlCountsDF, countsDef, para
     
     
     all <- rbind(all, all_exons@CNV.calls)
+    
   }
   
   return(all)
@@ -96,7 +101,7 @@ print(paste("Params for this execution:", list(params)))
 
 # go over datasets and run ExomeDepth for those which are active
 for (name in names(datasets)) {
-
+  
   dataset <- datasets[[name]]
   
   if (dataset$include){
@@ -158,28 +163,28 @@ for (name in names(datasets)) {
       print(paste("ExomeDepth Skipping pre-calc phase for", name, "dataset finished", sep=" "))
       countsDF <- readRDS(file.path(params$precalcFolder, "countsDF.rds"))
     }
-
     
     # Process each sample
     all <- data.frame()
+    
     if (!is.null(dataset$clinical_indication) && dataset$clinical_indication != ""){
       sample_indications <- read.table(dataset$clinical_indication, header = T, sep = "\t", stringsAsFactors=F)[,c(1,2)]
       sample_indications <- sample_indications[sample_indications$Genes != "" & sample_indications$Genes != " ", ] # remove empty items
       indicationsComp <- readCompatibleIndications(dataset$clinical_indication) # get compatible indications for each indication
-
+      
       for (indication in names(indicationsComp)) {
         print(paste("\nProcessing indication:", indication))
-
-
+        
+        
         # samples to test: samples matching this indication
         testSamplesNames <- sample_indications[sample_indications$Genes == indication,][["SampleID"]]
         if (length(testSamplesNames > 0)){
-
+          
           # Calculate available control samples: those compatible with test indication
           compatibles <- indicationsComp[[indication]]
           samplesToExclude <- sample_indications[!sample_indications$Genes %in% compatibles,][["SampleID"]]
           controlSamplesNames <- sample_indications[!sample_indications$SampleID %in% samplesToExclude, ][["SampleID"]]
-
+          
           # Call other algorithm steps
           results <- processExomedepthBody(testCountsDF = countsDF[testSamplesNames],
                                            controlCountsDF = countsDF[controlSamplesNames],
@@ -188,16 +193,17 @@ for (name in names(datasets)) {
           all <- rbind(all, results)
         }
       }
-
+      
     } else {
-      message("Clinical indication not found, using all samples potentially as controls")
-
+      message("Clinical indication 
+              not found, using all samples potentially as controls")
+      
       all <- processExomedepthBody(testCountsDF = countsDF[7:ncol(countsDF)],
                                    controlCountsDF = countsDF[7:ncol(countsDF)],
                                    countsDef = countsDF[1:6],
                                    params = params)
     }
-
+    
     # write results
     write.table(all, file = outputFile, sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
     
