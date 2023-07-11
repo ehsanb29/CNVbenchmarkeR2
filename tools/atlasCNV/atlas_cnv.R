@@ -50,7 +50,7 @@ rpkm_matrix_file = opt$rpkm_file
 
 
 ccc = read.table(file=rpkm_matrix_file, header=T, check.names=F, row.names=1)
-View(ccc)
+
 # Midpool summary result outputfile & midpool directory
 midpool_summary_results = gsub('RPKM_matrix', 'atlas_cnv_summary', rpkm_matrix_file) 
 midpool_dir = gsub('/.*', '/', rpkm_matrix_file)
@@ -61,7 +61,7 @@ midpool_dir = gsub('/.*', '/', rpkm_matrix_file)
 # ppp: df of the panel design file with 3 columns: ppp$Exon_Target, ppp$Gene_Exon, ppp$Call_CNV, ppp$RefSeq
 panel_design_file = opt$panel_file
 ppp = read.table(file=panel_design_file, header=T, check.names=F)
-View(ppp)
+
 
 
 # =============================================================================
