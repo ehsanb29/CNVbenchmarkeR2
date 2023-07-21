@@ -1,0 +1,21 @@
+# default
+ylimits: 
+  default: c(-2, 2)
+  options: []
+iqr_multiplier: 
+  default: 3
+  options: []
+threshold.min_exons: 
+  default: 1
+  options: []
+threshold.cnv_log2_cutoffs: 
+  default: c(-0.55, 0.40)
+  options: []
+#iterative.calling.limit: 
+#  default: 1        #Set to 0 to iterate until all failed samples are removed
+#infer.batch.for.sub.out_dir: 
+#  default: TRUE     #Set to FALSE to prompt users for output directory
+#clobber.output.directory: FALSE    #Set to FALSE to stop run when output directory already exists
+
+#Setting a path to data skips prompts. Set to FALSE for deployment.
+#dev_dir: FALSE

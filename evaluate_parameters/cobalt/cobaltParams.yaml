@@ -1,0 +1,35 @@
+training_samples:
+  default: 50
+  options: [5, 10, 20, 30, 40, 45, 50, 55, 60, 70, 80, 90, 100, 150, 200]
+  
+#chunk_size: not included because results are relatively insensitive, training becomes slower.
+#  default: 1000
+#  options: 
+
+no_mask:  
+  default: False
+  options: [True, False]
+
+var_cutoff: 
+  default: 0.90
+  options: [0.2, 0.4, 0.6, 0.8, 0.85, 0.875, 0.89, 0.9, 0.91, 0.925, 0.94, 0.96, 0.98, 0.99]
+  
+min_depth: 
+  default: 20
+  options: [5, 10, 15, 20, 25, 30, 35, 50, 75, 100, 200, 300, 500, 1000]
+  
+low_depth_trim_frac: 
+  default: 0.01
+  options: 
+  
+high_depth_trim_frac: 
+  default: 0.01
+  options: [0.001, 0.003, 0.005, 0.0055, 0.01, 0.0105, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05, 0.1, 0.3, 0.5]
+  
+high_cv_trim_frac: 
+  default: 0.01
+  options: [0.001, 0.003, 0.005, 0.0055, 0.01, 0.0105, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05, 0.1, 0.3, 0.5]
+  
+cluster_width: 
+  default: 50
+  options: [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200]
