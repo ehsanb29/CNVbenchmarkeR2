@@ -1,5 +1,5 @@
 # Runs Cobalt over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runCobalt.R [cobalt_params_file] [datasets_params_file]
+#USAGE: Rscript runCobalt.R [cobalt_params_file] [datasets_params_file] [include_temp_files]
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -12,9 +12,11 @@ print(args)
 if(length(args)>0) {
   cobaltParamsFile <- args[1]
   datasetsParamsFile <- args[2]
+  includeTempFiles <- args[3]
 } else {
   cobaltParamsFile <- "tools/cobalt/cobaltParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
+  includeTempFiles <- "true"
 }
 
 #Load the parameters file
@@ -55,7 +57,9 @@ for (name in names(datasets)) {
     ## Create a coverage directory and coverage count for all samples----
     dir.create(file.path(outputFolder, "coverage"), showWarnings = FALSE)
     allCov <- file.path(outputFolder, "coverage/samples_coverages.bed")
-    cmd <- paste( file.path(cobaltFolder, "covcounter"),
+    cmd <- paste( ".", cobaltFolder, "\n",
+                  #"srun",
+                  "covcounter",
                   "--bed", bedFile,
                   "--bams",  paste(bamFiles, collapse = " "),
                   "--threads", params$threads,
@@ -74,12 +78,16 @@ for (name in names(datasets)) {
     # Go over each bam in bamFiles
     for (i in seq_len(length(bamFiles))){
 
-    ## Training ----
-      # Coverage for training model: Select params$training_samples (default: 50) random samples to compute the model, excluding the sample of interest from the training
-      set.seed(123)
-      randomSamples <- sample(c(1:length(bamFiles))[-i], params$training_samples, replace = FALSE)
-      trainingSamples <- bamFiles[randomSamples]
-      trainingSamplesName <-  samplesName[randomSamples]
+      ## Training ----
+      #Extract the coverages of all the samples except the one of interest  and store the results in a bed file
+      trainingSamples <- bamFiles[-i]
+      trainingSamplesName <-  samplesName[-i]
+      # # Coverage for training model: Select params$training_samples (default: 50) random samples to compute the model, excluding the sample of interest from the training
+      # set.seed(123)
+      # randomSamples <- sample(c(1:length(bamFiles))[-i], params$training_samples, replace = FALSE)
+      # trainingSamples <- bamFiles[randomSamples]
+      # trainingSamplesName <-  samplesName[randomSamples]
+      #
 
       # Extract the coverages of the 50 samples randomly selected and store the results in a bed file
       covFile <- allCovFile %>%
@@ -98,7 +106,9 @@ for (name in names(datasets)) {
 
       # Build the model with the training samples (n=50)
       trainingModel <- file.path(outputFolder, paste0("training/training_model", samplesName[i], ".model"))
-      cmd <- paste(file.path(cobaltFolder,"cobalt"), "train",
+      cmd <- paste(".", cobaltFolder, "\n",
+                   #"srun",
+                   "cobalt", "train",
                    "--depths", trainingCov,
                    "-o", trainingModel,
                    "--chunk-size", params$chunk_size,
@@ -132,7 +142,9 @@ for (name in names(datasets)) {
 
       # Execute the model with a bed output format
       testResults <- file.path(outputFolder, paste0("test/results/test", samplesName[i], "_results.bed"))
-      cmd <- paste(file.path(cobaltFolder, "cobalt"), "predict",
+      cmd <- paste(".", cobaltFolder, "\n",
+                   #"srun",
+                   "cobalt", "predict",
                    "-m", trainingModel,
                    "-d", testCov,
                    "-o", testResults)
@@ -180,10 +192,10 @@ for (name in names(datasets)) {
       #Group by gene to only have one row per gene and get the smallest start coordinate and the biggest end coordinate
       res <- as.data.frame(IRanges::subsetByOverlaps(bedGR, cnvGR)) %>%
         dplyr::mutate(copy_number = cnvGR$copy_number,
-               quality = cnvGR$quality,
-               #width = cnvGR$width,
-               targets = cnvGR$targets,
-               Sample = resultsGR$Sample[i]) %>%
+                      quality = cnvGR$quality,
+                      #width = cnvGR$width,
+                      targets = cnvGR$targets,
+                      Sample = resultsGR$Sample[i]) %>%
         dplyr::group_by(name, Sample, seqnames) %>%
         dplyr::summarise(start_gene = min(start),
                          end_gene= max (end),
@@ -212,6 +224,14 @@ for (name in names(datasets)) {
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "name",
                         sampleColumn = "Sample", chrColumn = "seqnames", startColumn = "start_gene",
                         endColumn = "end_gene", cnvTypeColumn = "CNV.type")
+
+    #Delete temporary files if specified
+    if(includeTempFiles == "false"){
+      filesAll <- list.files(outputFolder, full.names = TRUE)
+      filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      do.call(unlink, filesToRemove)
+    }
 
   }
 }

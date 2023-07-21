@@ -1,5 +1,5 @@
 # Runs cnvkit over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runCnvkit.R [clearCNV_params_file] [datasets_params_file]
+#USAGE: Rscript runCnvkit.R [clearCNV_params_file] [datasets_params_file] [include_temp_files]
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -11,9 +11,11 @@ args <- commandArgs(TRUE)
 if(length(args)>0) {
   cnvkitParamsFile <- args[1]
   datasetsParamsFile <- args[2]
+  includeTempFiles <- args[3]
 } else {
   cnvkitParamsFile <- "tools/cnvkit/cnvkitParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
+  includeTempFiles <- "true"
 }
 
 #Load the parameters file
@@ -357,6 +359,14 @@ message("Saving CNV GenomicRanges results")
 saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "name",
                     sampleColumn = "Sample", chrColumn = "seqnames", startColumn = "start_gene",
                     endColumn = "end_gene", cnvTypeColumn = "CNV.type")
+
+#Delete temporary files if specified
+if(includeTempFiles == "false"){
+  filesAll <- list.files(outputFolder, full.names = TRUE)
+  filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+  filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+  do.call(unlink, filesToRemove)
+}
 
   }
 }

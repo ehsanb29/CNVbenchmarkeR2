@@ -1,5 +1,4 @@
-cobaltFolder: "/home/emunte/miniconda3/bin"
-
+cobaltFolder: ~/venv-cobalt/bin/activate
 # default values
 threads: 2
 training_samples: 50

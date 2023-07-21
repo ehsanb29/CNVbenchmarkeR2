@@ -1,5 +1,5 @@
 # Runs clearCNV over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runclearCNV.R [clearCNV_params_file] [datasets_params_file]
+#USAGE: Rscript runclearCNV.R [clearCNV_params_file] [datasets_params_file] [include_temp_files]
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -12,9 +12,11 @@ print(args)
 if(length(args)>0) {
   clearCNVParamsFile <- args[1]
   datasetsParamsFile <- args[2]
+  includeTempFiles <- args[3]
 } else {
   clearCNVParamsFile <- "tools/clearCNV/clearCNVParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
+  includeTempFiles <- "true"
 }
 
 #Load the parameters file
@@ -35,13 +37,13 @@ for (name in names(datasets)) {
   dataset <- datasets[[name]]
   if (dataset$include){
     print(paste("Starting clearCNV for", name, "dataset", sep=" "))
-    
+
     # extract fields
     bamsDir <- file.path(dataset$bams_dir)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
-    
-    
+
+
     # Create output folder
     if (!is.null(params$outputFolder)) {
       outputFolder <- params$outputFolder
@@ -50,16 +52,16 @@ for (name in names(datasets)) {
     }
     unlink(outputFolder, recursive = TRUE);
     dir.create(outputFolder, showWarnings = FALSE)
-    
+
     # Get bam files
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
-    
+
     ## Create bam directory and merge all bams in a txt file
     dir.create(file.path(outputFolder, "bams"))
     bamTxt <- file.path(outputFolder, paste0("bams/all_bams.txt"))
     write.table(x = paste(bamFiles, sep="\n"), file = bamTxt , quote = FALSE, row.names = FALSE, col.names=FALSE)
-    
-    
+
+
     # Call germline CNV caller
     cmd <- paste(".", clearCNVFolder, "\n",
                  #"srun",
@@ -86,7 +88,7 @@ for (name in names(datasets)) {
                  #"--drmaa_jobs", params$drmaa_jobs
     )
     paste(cmd);system(cmd);
-    
+
     # Read output file, add CNV.type column and write the results in a tsv file
     resFile <- file.path(outputFolder, paste0(name, "/results/cnv_calls.tsv"))
     resDF <- read.table(resFile, header = TRUE) %>%
@@ -94,7 +96,7 @@ for (name in names(datasets)) {
                                       "deletion",
                                       "duplication"))
     write.table(resDF, file.path(outputFolder, "cnv_calls.tsv"), sep="\t", quote=F, row.names = FALSE, col.names = TRUE)
-    
+
     # Save results----
     # Path to  tsv file
     finalSummaryFile <- file.path(outputFolder, "cnv_calls.tsv")
@@ -103,6 +105,14 @@ for (name in names(datasets)) {
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "gene",
                         sampleColumn = "sample", chrColumn = "chr", startColumn = "start",
                         endColumn = "end", cnvTypeColumn = "CNV.type")
-    
+
+    #Delete temporary files if specified
+    if(includeTempFiles == "false"){
+      filesAll <- list.files(outputFolder, full.names = TRUE)
+      filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      do.call(unlink, filesToRemove)
+    }
+
   }
 }

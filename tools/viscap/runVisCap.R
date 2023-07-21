@@ -1,5 +1,5 @@
 # Runs viscap over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runVisCap.R [cobal`t_params_file] [datasets_params_file]
+#USAGE: Rscript runVisCap.R [cobalt_params_file] [datasets_params_file] [include_temp_files]
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -12,9 +12,11 @@ print(args)
 if(length(args)>0) {
   viscapParamsFile <- args[1]
   datasetsParamsFile <- args[2]
+  includeTempFiles <- args[3]
 } else {
   viscapParamsFile <- "tools/viscap/viscapParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
+  includeTempFiles <- "true"
 }
 
 
@@ -33,14 +35,14 @@ for (name in names(datasets)) {
   dataset <- datasets[[name]]
   if (dataset$include){
     print(paste("Starting viscap for", name, "dataset", sep=" "))
-    
+
     # extract fields
     bamsDir <- file.path(dataset$bams_dir)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
-    
-    
-    
+
+
+
     # Create output folder
     if (!is.null(params$outputFolder)) {
       outputFolder <- params$outputFolder
@@ -50,24 +52,24 @@ for (name in names(datasets)) {
     unlink(outputFolder, recursive = TRUE);
     dir.create(outputFolder, showWarnings = FALSE)
 
-    
-    
+
+
     #create input files required for running GATK
     # Dictionary ----
     #create dictionary file (.dict) from reference genome (.)
     fastaDict <- paste0(tools::file_path_sans_ext(fastaFile), ".dict")
-    
+
     if(!file.exists(fastaDict)){
       cmd <- paste0(" java -jar ", picardJar,
                     " CreateSequenceDictionary",
                     " -R ", fastaFile,
                     " -O ", fastaDict)
-      
-      
+
+
       paste(cmd);system(cmd);
     }
-    
-    
+
+
     #Depth of coverage
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     depthCoverageFolder <- file.path(outputFolder, "DepthOfCoverage")
@@ -84,7 +86,7 @@ for (name in names(datasets)) {
     }
     #need to enter to the folder where viscap config is stored
     setwd(outputFolder)
-    
+
     #Create a cfg file with all the parameters to use
     viscapConfig<- file.path(outputFolder, "VisCap.cfg")
     cfg <- data.frame(V1=c("#VisCap configuration file for Linux users"))
@@ -102,24 +104,24 @@ for (name in names(datasets)) {
       dplyr::add_row(V1=paste0('clobber.output.directory    <- ', params$clobber.output.directory)) %>%
       dplyr::add_row(V1=paste0('dev_dir     <- ', params$dev_dir))
     write.table(cfg,  viscapConfig, col.names = FALSE, row.names = FALSE, quote=FALSE)
-    
+
     if(params$iterative.calling.limit==1){
-      outputFolder1 <- file.path(outputFolder, paste0(basename(outputFolder), "_run1")) 
+      outputFolder1 <- file.path(outputFolder, paste0(basename(outputFolder), "_run1"))
       dir.create(outputFolder1)
     }else{
       outputFolder1 <- outputFolder
     }
-    
-   
+
+
     cmd <- paste("Rscript", file.path(viscapFolder, "VisCap.R"),
                  depthCoverageFolder,
                  outputFolder1,
                  viscapConfig)
-    
+
     print(cmd); system(cmd)
-    
+
     setwd("../..") #return to the folder
-    
+
     #Create a dataframe to store viscap results
     cnvData <- data.frame()
     ## Get the result of the most recent run
@@ -128,16 +130,16 @@ for (name in names(datasets)) {
     run <- runs[numberRuns]
     resultsFiles <- list.files(path=run, pattern=".cnvs.xls", full.names = TRUE)
     for(i in seq_len(length(resultsFiles))){
-      testResultDf <- read.csv2(resultsFiles[i], sep="\t")%>% 
+      testResultDf <- read.csv2(resultsFiles[i], sep="\t")%>%
         dplyr::mutate(chr= stringr::str_split(Genome_start_interval, ":") %>% purrr::map(1) %>% unlist(),
                       start = stringr::str_split(Genome_start_interval, ":|-") %>% purrr::map(2) %>% unlist(),
                       end= stringr::str_split(Genome_start_interval, ":|-") %>% purrr::map(3) %>% unlist()) %>%
-        dplyr::mutate(copy_number = ifelse(CNV == "Loss", 
-                                           "deletion", 
+        dplyr::mutate(copy_number = ifelse(CNV == "Loss",
+                                           "deletion",
                                            ifelse(CNV=="Gain",
-                                                  "duplication", 
+                                                  "duplication",
                                                   "")))
-      
+
       cnvData <- rbind(cnvData, testResultDf)
     }
     cnvData <- cnvData %>% select("chr", "start", "end", "copy_number", "Median_log2ratio", "Interval_count", "Sample" )
@@ -149,10 +151,10 @@ for (name in names(datasets)) {
     resGenes <- data.frame()
     # go over each CNV to identify genes
     for (i in seq_len(length(resultsGR))){
-      
+
       #get the CNV
       cnvGR <- regioneR::toGRanges(resultsGR[i,])
-      
+
       # Merge the cnv with the bed file to know the "affected" genes.
       # Mutate columns to include information related to the cnv of interest (quality, the copy_number, Sample..)
       #Group by gene to only have one row per gene and get the smallest start coordinate and the biggest end coordinate
@@ -168,23 +170,30 @@ for (name in names(datasets)) {
                          copy_number = min(copy_number),
                          quality = min(quality),
                          width = sum(width))
-      
+
       # Merge each cnv result per gene with the rest
       resGenes <- rbind(resGenes, res)
     }
-    
+
     # Save results----
     # Print results in a tsv file
     finalSummaryFile <- file.path(outputFolder, "cnvs_summary.tsv")
     write.table(resGenes, finalSummaryFile, sep = "\t", quote = F, row.names = F)
     # Save results in a GenomicRanges object
     message("Saving CNV GenomicRanges results")
-    
+
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "name",
                         sampleColumn = "Sample", chrColumn = "seqnames", startColumn = "start_gene",
                         endColumn = "end_gene", cnvTypeColumn = "copy_number")
-    
-    
+
+
+    #Delete temporary files if specified
+    if(includeTempFiles == "false"){
+      filesAll <- list.files(outputFolder, full.names = TRUE)
+      filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      do.call(unlink, filesToRemove)
+    }
   }
-  
+
 }
