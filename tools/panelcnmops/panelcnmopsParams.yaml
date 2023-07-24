@@ -12,3 +12,4 @@ quSizeFactor: 0.75
 priorImpact: 1
 minMedianRC: 30
 maxControls: 25
+corrThresh: 0.99
