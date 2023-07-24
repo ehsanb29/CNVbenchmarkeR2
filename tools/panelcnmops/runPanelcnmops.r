@@ -99,6 +99,7 @@ for (name in names(datasets)) {
     priorImpact <- params$priorImpact
     minMedianRC <- params$minMedianRC
     maxControls <- params$maxControls
+    corrThresh  <- params$corrThresh
 
     # Test samples depending on sample indications compatibility
     allResults <- data.frame()
@@ -130,7 +131,7 @@ for (name in names(datasets)) {
           XandCB <- testSamples
           elementMetadata(XandCB) <- cbind(elementMetadata(XandCB), elementMetadata(controlSamples))
           resultList <- runPanelcnMops(XandCB, 1:ncol(elementMetadata(testSamples)),countWindows = countWindows, I = classes, sizeFactor = sizeFactor, norm = norm,
-                                       normType = normType, qu = qu, quSizeFactor = quSizeFactor, priorImpact = priorImpact, minMedianRC = minMedianRC, maxControls = maxControls)
+                                       normType = normType, qu = qu, quSizeFactor = quSizeFactor, priorImpact = priorImpact, minMedianRC = minMedianRC, maxControls = maxControls, corrThresh = corrThresh )
 
           # Build results table
           sNames <- colnames(elementMetadata(testSamples))
@@ -149,7 +150,7 @@ for (name in names(datasets)) {
       XandCB <- counts
       elementMetadata(XandCB) <- cbind(elementMetadata(XandCB), elementMetadata(XandCB))
       resultList <- runPanelcnMops(XandCB, 1:ncol(elementMetadata(counts)),countWindows = countWindows, I = classes, sizeFactor = sizeFactor, norm = norm,
-                                   normType = normType, qu = qu, quSizeFactor = quSizeFactor, priorImpact = priorImpact, minMedianRC = minMedianRC, maxControls = maxControls)
+                                   normType = normType, qu = qu, quSizeFactor = quSizeFactor, priorImpact = priorImpact, minMedianRC = minMedianRC, maxControls = maxControls, corrThresh = corrThresh)
 
       # Build results table
       sampleNames <- colnames(elementMetadata(counts))
