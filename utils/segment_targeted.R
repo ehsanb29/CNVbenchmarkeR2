@@ -1,8 +1,8 @@
 # CODEX2 adaptation to panel setting. Code obtained from: https://github.com/yuchaojiang/CODEX2/blob/master/targeted_sequencing/segment_targeted.R
-
-segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, chri, lmax, mode) {
+segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, lmax, mode) {
+  chri <- as.matrix(seqnames(refi))[1]
   finalcall <- matrix(ncol = 10)
-  lmax <- lmax - 1
+  lmax <- max(1, lmax - 1)
   if(is.vector(yi)){
     yi=t(yi)
     yhati=t(yhati)
@@ -19,9 +19,9 @@ segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, chri, lmax, mo
     yact <- rep(0, length(i))
     lambda <- rep(0, length(i))
     for (k in 1:num) {
-      yact[(lmax * k - (lmax - 1)):(lmax * k)] <- cumsum(y[k:(k + 
+      yact[(lmax * k - (lmax - 1)):(lmax * k)] <- cumsum(y[k:(k +
                                                                 lmax)])[-1]
-      lambda[(lmax * k - (lmax - 1)):(lmax * k)] <- cumsum(yhat[k:(k + 
+      lambda[(lmax * k - (lmax - 1)):(lmax * k)] <- cumsum(yhat[k:(k +
                                                                      lmax)])[-1]
     }
     i <- i[j <= num]
@@ -39,14 +39,14 @@ segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, chri, lmax, mo
     # chat[chat > 5] <- 5
     if (sum(lratio > 0) > 0) {
       if (sum(lratio > 0) >= 2) {
-        finalmat <- (cbind(i, j, yact, lambda, chat, lratio))[lratio > 
+        finalmat <- (cbind(i, j, yact, lambda, chat, lratio))[lratio >
                                                                 0, ]
         finalmat <- finalmat[order(-finalmat[, 6]), ]
         s <- 1
         while (s <= (nrow(finalmat))) {
           rowstart <- finalmat[s, 1]
           rowend <- finalmat[s, 2]
-          rowsel <- (finalmat[, 1] <= rowend & finalmat[, 2] >= 
+          rowsel <- (finalmat[, 1] <= rowend & finalmat[, 2] >=
                        rowstart)
           rowsel[s] <- FALSE
           finalmat <- finalmat[!rowsel, ]
@@ -57,7 +57,7 @@ segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, chri, lmax, mo
         }
       }
       if (sum(lratio > 0) == 1) {
-        finalmat <- (cbind(i, j, yact, lambda, chat, lratio))[lratio > 
+        finalmat <- (cbind(i, j, yact, lambda, chat, lratio))[lratio >
                                                                 0, ]
         finalmat <- t(as.matrix(finalmat))
       }
@@ -68,14 +68,14 @@ segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, chri, lmax, mo
         tau <- sort(unique(c(as.vector(finalmat[1:s, 1:2]), 1, num)))
         P <- length(tau) - 2
         mbic <- loglikeij[s]
-        mbic <- mbic - 0.5 * sum(log(tau[2:length(tau)] - 
+        mbic <- mbic - 0.5 * sum(log(tau[2:length(tau)] -
                                        tau[1:(length(tau) - 1)]))
         mbic <- mbic + (0.5 - P) * log(num)
         mBIC[s] <- mbic
       }
       mBIC <- round(mBIC, digits = 3)
       if (mBIC[1] > 0) {
-        finalmat <- cbind(rep(sampname_qc[sampno], nrow(finalmat)), 
+        finalmat <- cbind(rep(sampname_qc[sampno], nrow(finalmat)),
                           rep(chri, nrow(finalmat)),rep(genei, nrow(finalmat)), finalmat)
         finalmat <- (cbind(finalmat, mBIC)[1:which.max(mBIC), ])
         finalcall <- rbind(finalcall, finalmat)
@@ -92,14 +92,14 @@ segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, chri, lmax, mo
   cnvtype[as.numeric(finalcall[, 8]) < 2] <- "del"
   cnvtype[as.numeric(finalcall[, 8]) > 2] <- "dup"
   if (nrow(finalcall) == 1) {
-    finalcall <- t(as.matrix(c(finalcall[, 1:3], cnvtype, st, ed, (ed - 
+    finalcall <- t(as.matrix(c(finalcall[, 1:3], cnvtype, st, ed, (ed -
                                                                      st + 1)/1000, finalcall[, 4:10])))
   } else {
-    finalcall <- cbind(finalcall[, 1:3], cnvtype, st, ed, (ed - st + 
+    finalcall <- cbind(finalcall[, 1:3], cnvtype, st, ed, (ed - st +
                                                              1)/1000, finalcall[, 4:10])
   }
-  colnames(finalcall) <- c("sample_name", "chr", "gene" ,"cnv", "st_bp", "ed_bp", 
-                           "length_kb", "st_exon", "ed_exon", "raw_cov", 
+  colnames(finalcall) <- c("sample_name", "chr", "gene" ,"cnv", "st_bp", "ed_bp",
+                           "length_kb", "st_exon", "ed_exon", "raw_cov",
                            "norm_cov", "copy_no", "lratio", "mBIC")
   rownames(finalcall) <- rep("", nrow(finalcall))
   finalcall
