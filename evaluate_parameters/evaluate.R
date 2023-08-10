@@ -1,25 +1,26 @@
-#USAGE: Rscript optimizer.r [-t tools.yaml]  [-d dataset.yaml] (call from evaluate folder)
+#USAGE: Rscript optimizer.r [-t tools.yaml]  [-d dataset.yaml] [-tf include_temp_files] (call from evaluate folder)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 library(methods)
 library("optparse")
+library("dplyr")
 options(scipen = 999)  # to disable scientific number notation
-source("../utils/cnvStats.r")  # Load utils functions
-source("../utils/optimizerUtils.r")  # Load opt. utils functions
+#source("../utils/cnvStats.r")  # Load utils functions
+#source("../utils/optimizerUtils.r")  # Load opt. utils functions
 
 # Return available options for the different params
-getFixedValues = function(param, name){
-  vl <- ValuesList()
-  vals <- list()
-  for (v in param$options){
-    newVal <- Value()
-    newVal$new(v)
-    vals[[length(vals) + 1]] <- newVal
-  }
-  vl$new(vals, name, param$default, FALSE)
-  
-  return(vl)
-}
+# getFixedValues = function(param, name){
+#   vl <- ValuesList()
+#   vals <- list()
+#   for (v in param$options){
+#     newVal <- Value()
+#     newVal$new(v)
+#     vals[[length(vals) + 1]] <- newVal
+#   }
+#   vl$new(vals, name, param$default, FALSE)
+#
+#   return(vl)
+# }
 
 
 # Build options list
@@ -28,6 +29,7 @@ option_list <- list(
               help="Path to tools file (yaml)", metavar="character"),
   make_option(c("-d", "--datasets"), type="character", default="datasets.yaml",
               help="Path to datasets file (yaml)", metavar="character")
+
 );
 opt_parser <- OptionParser(option_list=option_list);
 
@@ -45,20 +47,36 @@ datasets <- yaml.load_file(args$datasets)
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
 
-for (i in 1:seq_len(length(tools))){
-  
+for (i in seq_len(length(tools))){
+
   if(isTRUE(tools[[i]])){
     algName <- names(tools[i])
-    
+
     #create a folder for the dataset
     folder_name <- file.path(algName, name)
     dir.create(folder_name)
-    
-    
-    #default params 
+    datasets[[name]]$include <- "true"
+    datasets2 <- as.yaml(datasets[name])  %>% stringr::str_replace_all(pattern = "'", replacement = "")
+    write.table(datasets2, file.path(folder_name, "datasets.yaml"), quote=FALSE, col.names = FALSE, row.names = FALSE)
+
+
+    #create a tools and dataset yaml
+    # tools[[algName]]<- "true"
+    # number <- which(names(tools)==algName)
+    # tools[-number] <- "false"
+    #
+    # tools2 <- as.yaml(tools) %>% stringr::str_replace_all(pattern = "'", replacement = "")
+
+    # write.table(tools2, "/media/emunte/Elements1/cluster3/evaluate_parameters/decon/tools.yaml", quote=FALSE, col.names = FALSE, row.names = FALSE)
+
+
+
+
+
+    #default params
     params_default <- yaml.load_file(paste0("../tools/", algName, "/", algName, "Params.yaml"))
     params_optimizer <- yaml.load_file(paste0(algName, "/", algName, "Params.yaml"))
-  
+
     paramsValues <- list()  # list of values to be tested for each param
     for (i in 1:length(params_optimizer)){
       p <-params_optimizer[i]
@@ -74,7 +92,7 @@ for (i in 1:seq_len(length(tools))){
         print(value_param)
         folder_param_value <- file.path(folder_param, value_param )
         dir.create(folder_param_value , showWarnings = FALSE)
-        
+
         # create logs and input folder to be used by jobs
         logsFolder <- file.path(folder_param_value, "logs")
         unlink(logsFolder, recursive = TRUE);
@@ -85,22 +103,23 @@ for (i in 1:seq_len(length(tools))){
         outputFolder <- file.path(folder_param_value, "output")
         unlink(outputFolder, recursive = TRUE);
         dir.create(outputFolder, showWarnings = FALSE)
-        
+
         #Create the new yaml
         params_tunned <- params_default
+        params_tunned[["outputFolder"]] <- paste0("./evaluate_parameters/",outputFolder)
         params_tunned[[paramName]] <- value_param
         write_yaml(params_tunned, file = file.path(inputFolder, paste0(algName, "params.yaml")))
-        
-        
+
+
       }
-    
-    
+
+
     }
-  
+
   }
-  
+
 }
-  
+
 }
 
 
