@@ -15,6 +15,7 @@ if(length(args)>0) {
   paramsFile <- args[1]
   datasetsParamsFile <- args[2]
   includeTempFiles <- args[3]
+  evaluateParameters <- args[4]
 } else {
   paramsFile <- "params.yaml"
   datasetsParamsFile <- "../../datasets.yaml"
@@ -34,11 +35,13 @@ print(paste("Datasets for this execution:", list(datasets)))
 # Get AtlasCNV folder ----
 atlascnvFolder <- file.path(params$atlascnvFolder)
 #locate the reference and contig files
-fastaFile <- file.path(datasets$ICR96$fasta_file)
+fastaFile <- file.path(datasets[[1]]$fasta_file)
+print(fastaFile)
 contigFile <- file.path(params$contigFile)
 gatkFolder <- file.path(params$gatkFolder)
 picardJar <- file.path(params$picardJar)
 print(picardJar)
+currentFolder <- getwd()
 
 
 #create input files required for running GATK
@@ -58,6 +61,7 @@ print(picardJar)
 
 
 fastaDict <- paste0(tools::file_path_sans_ext(fastaFile), ".dict")
+print(file.exists(fastaDict))
 
 if(!file.exists(fastaDict)){
   cmd <- paste0(" java -jar ", picardJar,
@@ -90,8 +94,13 @@ for (name in names(datasets)) {
 
 
     # Create output folder
-    outputFolder <- file.path(getwd(), "output", paste0("atlasCNV-", name))
-    print(outputFolder)
+    if (!is.null(params$outputFolder)) {
+      if(stringr::str_detect(params$outputFolder, "^./")) params$outputFolder <- stringr::str_sub(params$outputFolder, 3, stringr::str_length(params$outputFolder))
+      outputFolder <- file.path(currentFolder, params$outputFolder)
+    } else {
+      outputFolder <- file.path(getwd(), "output", paste0("atlasCNV-", name))
+    }
+    unlink(outputFolder, recursive = TRUE);
     dir.create(outputFolder, showWarnings = FALSE)
 
     # extract fields
@@ -117,15 +126,13 @@ for (name in names(datasets)) {
     #if(!file.exists(paste0(atlascnvFolder, "/list.interval_list"))){
     #dir.create(file.path(outputFolder,"list.interval_list"), showWarnings = FALSE)
     # print("file")
-    cmd_interval <- paste0( " java -jar ", picardJar,
-                            " BedToIntervalList",
-                            " -I ", bedFile,
-                            " -O ", outputFolder,"/list.interval_list",
-                            " -SD ", fastaDict)
-    paste(cmd_interval);system(cmd_interval);
+    # cmd_interval <- paste0( " java -jar ", picardJar,
+    #                         " BedToIntervalList",
+    #                         " -I ", bedFile,
+    #                         " -O ", outputFolder,"/list.interval_list",
+    #                         " -SD ", fastaDict)
+    # paste(cmd_interval);system(cmd_interval);
 
-
-    print("FIns aqui funciona")
 
     ## Panel file ----
     #create panel file to input in Atlas
@@ -141,6 +148,7 @@ for (name in names(datasets)) {
       mutate(Call_CNV = ifelse(grepl("^Y", Exon_Target), "N", "Y"))%>%
       mutate(RefSeq=V4) %>%
       select(-starts_with("V"))
+    panel$Gene_Exon<-ave(panel$Gene_Exon, panel$Gene_Exon, FUN = function(i) paste0(i, '_', seq_along(i)))
     #export panel file
     #write.table(panel, file=paste0(atlascnvFolder,'/panel',name,'.txt'),sep="\t", col.names=T, row.names=FALSE,quote=FALSE)
     write.table(panel, file=paste0(outputFolder,'/panel',name,'.txt'),sep="\t", col.names=T, row.names=FALSE,quote=FALSE)
@@ -159,7 +167,14 @@ for (name in names(datasets)) {
     #create folder for coverage files
     #coverageFiles <- file.path(paste0(outputFolder, "/coverage_files"))
     #create Depth of coverageFolder
-    depthCoverageFolder <- paste0(outputFolder,"/DepthOfCoverage")
+    print(evaluateParameters)
+    depthCoverageFolder <- ifelse(evaluateParameters=="false",
+                                  file.path(outputFolder, "DepthOfCoverage"),
+                                  paste0(currentFolder, "/evaluate_parameters/atlasCNV/", name, "/DepthOfCoverage"))
+
+    print(depthCoverageFolder)
+    if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder))<7){
+
     dir.create(depthCoverageFolder, showWarnings = FALSE)
 
     #get depth of coverage for each BAM file, using GATK
@@ -171,11 +186,12 @@ for (name in names(datasets)) {
                      "-I", bamFiles[i],
                      "-O",  file.path(depthCoverageFolder,paste0(bam[i], ".DATA")),
                      "--output-format", "TABLE",
-                     " --disable-sequence-dictionary-validation true ",
+                     #" --disable-sequence-dictionary-validation true ",
                      "-L", bedFile)
         #"-L", paste0(outputFolder,"/list.interval_list"))
-        paste(cmd);system(cmd)
+        print(cmd);system(cmd)
       }
+    }
       #   print(basename(bam))
       #   sample_name<-sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(bam))
       #   cmd_read_counts <- paste0( " gatk DepthOfCoverage ",
@@ -194,12 +210,17 @@ for (name in names(datasets)) {
 
     #read config file
     print(atlascnvFolder)
-    config <- read.table(paste0(atlascnvFolder,"/config"))
+    #config <- read.table(paste0(atlascnvFolder,"/config"))
+    ##atlasCNV configuration file for Linux users
+    cfg <- data.frame(V1=paste0("GATKDIR=", depthCoverageFolder, "/[SAMPLE_FCLBC].DATA.sample_interval_summary"))%>%
+      dplyr::add_row(V1=paste0("ATLASCNV=", params$atlascnvFolder)) %>%
+      dplyr::add_row(V1=paste0("RPATH=", params$rpath)) %>%
+      dplyr::add_row(V1=paste0("RSCRIPT=", params$Rscript))
 
     #Put the Depth of Coverage folder in config files
-    config[1,1] <- paste0("GATKDIR=", depthCoverageFolder, "/[SAMPLE_FCLBC].DATA.sample_interval_summary")
+    #config[1,1] <- paste0("GATKDIR=", depthCoverageFolder, "/[SAMPLE_FCLBC].DATA.sample_interval_summary")
 
-    write.table(config, paste0(outputFolder,"/config"), col.names = FALSE, row.names = FALSE, quote = FALSE)
+    write.table(cfg, paste0(outputFolder,"/config"), col.names = FALSE, row.names = FALSE, quote = FALSE)
 
 
     # Run Atlas-CNV ----
@@ -207,22 +228,34 @@ for (name in names(datasets)) {
     cmd_run_atlascnv <- paste0( "perl ",atlascnvFolder,"/atlas_cnv.pl",
                                 " --config ", outputFolder,"/config",
                                 " --panel ", outputFolder,'/panel',name,'.txt',
-                                " --sample ", outputFolder,"/", name, ".sample")
+                                " --sample ", outputFolder,"/", name, ".sample",
+                                " --threshold_del ", params$threshold_del,
+                                " --threshold_dup ", params$threshold_dup)
 
-    paste(cmd_run_atlascnv);system(cmd_run_atlascnv);
+    print(cmd_run_atlascnv);system(cmd_run_atlascnv);
 
     #merge cnv output files and modify columns
     #resDF <- list.files(paste0(outputFolder,"/",name), pattern = ".cnv$", recursive = TRUE, full.names = TRUE)  %>%
-    resDF <- list.files(name, pattern = ".cnv$", recursive = TRUE, full.names = TRUE)  %>%
-      purrr::set_names() %>%
-      purrr::map_dfr(read.csv, .id = "sample", sep='\t' ) %>%
-      mutate(sample = str_replace_all(basename(sample),".cnv","")) %>%
-      rename( gene= Gene_Exon) %>%
+    # resDF <- list.files(paste0(outputFolder,"/",name), pattern = ".cnv$", recursive = TRUE, full.names = TRUE)  %>%
+    #   purrr::set_names() %>%
+    #   purrr::map_dfr(~read.delim(.x)%>%
+    #                    mutate(across(everything(), as.character)), .id = "sample", sep='\t' ) %>%
+    #   mutate(sample = stringr::str_replace_all(basename(sample),".cnv","")) %>%
+    #   dplyr::rename("gene"= "Gene_Exon") %>%
+    #   tidyr::separate(Exon_Target, c("chr", "start","end"))%>%
+    #   mutate(CNV.type = ifelse(cnv == "del",
+    #                            "deletion",
+    #                            "duplication"))
+    resDF <- list.files(name, pattern = "\\.cnv", recursive = TRUE, full.names = TRUE)  %>%
+      purrr::set_names(basename) %>%
+      purrr::map(read.delim) %>% rlist::list.rbind() %>% as.data.frame() %>%
+      tibble::rownames_to_column(var="sample") %>% dplyr::mutate(sample= stringr::str_replace_all(sample, ".cnv.FAILED_sampleQC_and_sampleANOVA.[0-9]+|.cnv.FAILED_sampleANOVA.[0-9]+|.cnv..FAILED_sampleQC.[0-9]+|.cnv.FAILED_sampleQC.[0-9]|.cnv.FAILED_sampleANOVA|.cnv.[0-9]+|.cnv","")) %>%
+      #mutate(gene=Gene_Exon) %>%
+      dplyr::rename( "gene" = "Gene_Exon") %>%
       tidyr::separate(Exon_Target, c("chr", "start","end"))%>%
-      mutate(CNV.type = ifelse(cnv == "del",
-                               "deletion",
-                               "duplication"))
-
+      dplyr::mutate(CNV.type = ifelse(cnv == "del",
+                                      "deletion",
+                                      "duplication"))
 
     # Read output file, add CNV.type column and write the results in a tsv file
     write.table(resDF, file.path(outputFolder, "cnv_calls.tsv"), sep="\t", quote=F, row.names = FALSE, col.names = TRUE)
@@ -238,7 +271,7 @@ for (name in names(datasets)) {
 
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
-      filesAll <- list.files(outputFolder, full.names = TRUE)
+      filesAll <- list.files(outputFolder, full.names = TRUE, recursive=TRUE)
       filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
       do.call(unlink, filesToRemove)
