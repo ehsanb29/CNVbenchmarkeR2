@@ -17,6 +17,10 @@ DropOutliersSegment: 10 # Drop outlier bins more than this many multiples of the
 methodSegment: hmm-germline #{cbs,flasso,haar,none,hmm,hmm-tumor,hmm-germline} Segmentation method (see docs), or 'none' for chromosome arm-level averages as segments.
 alphaSegmetrics: 0.05 #Level to estimate confidence and prediction intervals; use with --ci and --pi. 
 bootstrapSegmetrics: 100 #Number of bootstrap iterations to estimate confidence interval; use with --ci.
-methodCall: clonal #{threshold,clonal,none} Calling method.
-thresholdsCall: -1.1,-0.25,0.2,0.7 #Hard thresholds for calling each integer copy number, separated by commas. Use the '=' sign on the command line
+methodCall: threshold #{threshold,clonal,none} Calling method.
+filterCall: ci
+thresholdsCall_del: -1.1
+thresholdsCall_loss: -0.25
+thresholdsCall_gain: 0.2
+thresholdsCall_amp: 0.7 #Hard thresholds for calling each integer copy number, separated by commas. Use the '=' sign on the command line
 alphaBintest: 0.005
