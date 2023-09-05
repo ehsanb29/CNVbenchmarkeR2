@@ -1,4 +1,5 @@
-convadingFolder: /yourPath/CoNVaDING-1.2.1
+#convadingFolder: /yourPath/CoNVaDING-1.2.1
+convadingFolder: /usr/local/opt/CoNVaDING-1.2.1
 defineControlsByIndication: false   # true for removing samples with the same clinical indication from controls to the one being tested (very high time consuming)
 
 regionThreshold: 20
