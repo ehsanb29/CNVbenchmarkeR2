@@ -156,6 +156,8 @@ if(length(args)>0) {
   includeTempFiles <- "true"
 }
 
+print(includeTempFiles)
+
 #Load the parameters file
 params <- yaml.load_file(codex2ParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
@@ -175,7 +177,7 @@ for (name in names(datasets)) {
     bamsDir <- file.path(dataset$bams_dir)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
-
+    print(getwd())
     # Create output folder
     if (!is.null(params$outputFolder)) {
       outputFolder <- params$outputFolder
