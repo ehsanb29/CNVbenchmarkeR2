@@ -31,6 +31,33 @@ for (name in names(datasets)) {
     if(isTRUE(tools[[i]])){
       algName <- names(tools[i])
 
+      #Create Depth of Coverage files for Viscap and AtlasCNV
+      if(algName == "viscap" | algName == "atlasCNV"){
+        depthCoverageFolder <- paste0("./evaluate_parameters/", algName, "/", name, "/DepthOfCoverage")
+
+        if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder))<7){
+          bamsDir <- file.path(dataset$bams_dir)
+          bedFile <- file.path(dataset$bed_file)
+          fastaFile <- file.path(dataset$fasta_file)
+
+          bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
+          dir.create(depthCoverageFolder, showWarnings = FALSE)
+          bam <- basename(bamFiles) %>% tools::file_path_sans_ext()
+          for (i in seq_len(length(bamFiles))){
+            cmd <- paste(file.path(gatkFolder, "gatk"),  "DepthOfCoverage",
+                         "-R",  fastaFile,
+                         "-I", bamFiles[i],
+                         "-O",  ifelse(algName == "viscap",
+                                       file.path(depthCoverageFolder,bam[i]),
+                                       file.path(depthCoverageFolder,paste0(bam[i], ".DATA"))),
+                         "--output-format", "TABLE",
+                         #" --disable-sequence-dictionary-validation true ",
+                         "-L",  bedFile )
+            paste(cmd);system(cmd)
+          }
+          }
+}
+
       filesParams <- list.files(paste0(getwd(), "/evaluate_parameters/", algName, "/", name), pattern= "params.yaml", recursive=TRUE, full.names=TRUE)
 
 
@@ -48,6 +75,7 @@ for (name in names(datasets)) {
                    filesParams[j],
                      file.path(paste(getwd(), "evaluate_parameters",algName, name, sep="/"), "datasets.yaml"),
                      args$include_temp_files,
+                     "true",
                      file.path(paste0(filesParams[j] %>% dirname() %>% dirname(),"/logs"),paste0(algName,".log")))
 
       cmd <- paste("sbatch evaluate_parameters/job.sh", query)
@@ -56,10 +84,10 @@ for (name in names(datasets)) {
 
         }
     }
-
+}
   }
 
-  }
+
 
 }
 
