@@ -30,7 +30,7 @@ environmentName <- file.path(params$environmentName)
 ngsbitsFolder <- file.path(params$ngsbitsFolder)
 # get clincnv folder
 clincnvFolder <- file.path(params$clincnvFolder)
-
+currentFolder <- getwd()
 
 # run clincnv on selected datasets
 for (name in names(datasets)) {
@@ -40,12 +40,13 @@ for (name in names(datasets)) {
 
     # Create output folder
     if (!is.null(params$outputFolder)) {
-      outputFolder <- params$outputFolder
+      if(stringr::str_detect(params$outputFolder, "^./")) params$outputFolder <- stringr::str_sub(params$outputFolder, 3, stringr::str_length(params$outputFolder))
+      outputFolder <- file.path(currentFolder, params$outputFolder)
     } else{
       outputFolder <- file.path(getwd(), "output", paste0("clincnv-", name))
     }
-    unlink(outputFolder, recursive = TRUE);
-    dir.create(outputFolder)
+   unlink(outputFolder, recursive = TRUE);
+   dir.create(outputFolder)
 
     # create folders to be used later
     ontargetFolder <- file.path(outputFolder, "ontargetCov")
@@ -149,7 +150,7 @@ for (name in names(datasets)) {
 
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
-      filesAll <- list.files(outputFolder, full.names = TRUE)
+      filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
       filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
       do.call(unlink, filesToRemove)
