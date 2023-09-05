@@ -1,5 +1,5 @@
 # Description: Run the benchmark analysis
-# USAGE: Rscript runBenchmark.R [-t tools_file] [-d datasets_file] [-tf include_temp_files]
+# USAGE: Rscript runBenchmark.R [-t tools_file] [-d datasets_file] [-f include_temp_files]
 
 # libs
 library("optparse")
@@ -17,7 +17,7 @@ option_list <- list(
               help="Path to tools file (yaml)", metavar="character"),
   make_option(c("-d", "--datasets"), type="character", default="datasets.yaml",
               help="Path to datasets file (yaml)", metavar="character"),
-  make_option(c("-tf", "--include_temp_files"), type="character", default="true",
+  make_option(c("-f", "--include_temp_files"), type="character", default="true",
               help="Include temporary files in the output folders", metavar="character")
 );
 opt_parser <- OptionParser(option_list=option_list);
@@ -25,6 +25,7 @@ opt_parser <- OptionParser(option_list=option_list);
 # Load params
 args <- parse_args(opt_parser);
 tools <- yaml.load_file(args$tools)
+
 
 
 # create logs/output folder if not exists
@@ -35,7 +36,7 @@ dir.create("output", showWarnings = F)
 ## Execute tools on selected datasets ##
 
 # Panelcn.mops
-if (tools$panelcn == T){
+if (tools$panelcnmops == T){
   cat(as.character(Sys.time()), " - Executing panelcn.MOPS\n")
   cmd <- paste("Rscript tools/panelcnmops/runPanelcnmops.r tools/panelcnmops/panelcnmopsParams.yaml", args$datasets, args$include_temp_files, " > logs/panelcnmops.log 2>&1")
   system(cmd)
@@ -70,7 +71,7 @@ if (tools$clincnv == T){
 }
 
 # CoNVaDING
-if (tools$clincnv == T){
+if (tools$convading == T){
   cat(as.character(Sys.time()), " - Executing CoNVaDING\n")
   cmd <- paste("Rscript tools/convading/runConvading.r tools/convading/convadingParams.yaml", args$datasets, args$include_temp_files," > logs/convading.log 2>&1")
   system(cmd)
@@ -103,12 +104,20 @@ if (tools$germlineCNVcaller == T){
   system(cmd)
 }
 
+# Viscap
+if (tools$viscap == T){
+  cat(as.character(Sys.time()), " - Executing Viscap\n")
+  cmd <- paste("Rscript tools/viscap/runVisCap.r tools/viscap/viscapParams.yaml", args$datasets, args$include_temp_files, "false", ">  logs/viscap.log 2>&1")
+  system(cmd)
+}
+
 # AtlasCNV
 if (tools$atlasCNV == T){
   cat(as.character(Sys.time()), " - Executing Atlas-CNV\n")
-  cmd <- paste("Rscript tools/atlasCNV/runAtlascnv.r tools/atlasCNV/atlasCNVParams.yaml", args$datasets, args$include_temp_files,">  logs/atlasCNV.log 2>&1")
+  cmd <- paste("Rscript tools/atlasCNV/runAtlascnv.r tools/atlasCNV/atlasCNVParams.yaml", args$datasets, args$include_temp_files, "false", ">  logs/atlasCNV.log 2>&1")
   system(cmd)
 }
+
 
 
 
