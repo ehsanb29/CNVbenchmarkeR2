@@ -1,4 +1,5 @@
-deconFolder: /yourPath/DECoN-1.0.1/Linux
+deconFolder: /home/croca/DECoN/Linux/
+#deconFolder: /yourPath/DECoN-1.0.1/Linux
 # default
 mincorr: 0.98
 mincov: 100
