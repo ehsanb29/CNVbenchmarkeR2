@@ -1,6 +1,7 @@
 # Runs DECON over the datasets cofigured at [datasets_params_file]
 #USAGE: Rscript runDecon.R [decon_params_file] [datasets_params_file] [include_temp_files]
 print(paste("Starting at", startTime <- Sys.time()))
+print(getwd())
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 
@@ -86,14 +87,16 @@ for (name in names(datasets)) {
 
     # Create output folder
     if (!is.null(deconParams$outputFolder)) {
-      outputFolder <- deconParams$outputFolder
+      if(stringr::str_detect(deconParams$outputFolder, "^./")) deconParams$outputFolder <- stringr::str_sub(deconParams$outputFolder, 3, stringr::str_length(deconParams$outputFolder))
+      outputFolder <- file.path(currentFolder, deconParams$outputFolder)
     } else
       outputFolder <- file.path(currentFolder, "output", paste0("decon-", name))
     if (is.null(deconParams$execution) || deconParams$execution != "skipPrecalcPhase") {
-      unlink(outputFolder, recursive = TRUE);
-      dir.create(outputFolder)
+      #unlink(outputFolder, recursive = TRUE);
+      #dir.create(outputFolder)
     }
 
+    print(outputFolder)
     # build input/output file paths
     ouputBams <- file.path(outputFolder, "output.bams")
     ouputRData <- file.path(outputFolder, "output.bams.RData")
@@ -134,6 +137,8 @@ for (name in names(datasets)) {
 
     # Save results in GRanges format
     message("Saving CNV GenomicRanges and Failures results")
+    #return to main folder
+    setwd(currentFolder)
     saveResultsFileToGR(outputFolder, "calls_all.txt", chrColumn = "Chromosome")
     saveExonFailures(file.path(outputFolder, "failures_Failures.txt"), bedFile, bamsDir, outputFolder)
 
