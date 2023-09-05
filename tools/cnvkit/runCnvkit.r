@@ -40,16 +40,17 @@ for (name in names(datasets)) {
     bamsDir <- file.path(dataset$bams_dir)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
-
+    currentFolder <- getwd()
 
     # Create output folder
     if (!is.null(params$outputFolder)) {
-      outputFolder <- params$outputFolder
+      if(stringr::str_detect(params$outputFolder, "^./")) params$outputFolder <- stringr::str_sub(params$outputFolder, 3, stringr::str_length(params$outputFolder))
+      outputFolder <- file.path(currentFolder, params$outputFolder)
     } else {
       outputFolder <- file.path(getwd(), "output", paste0("cnvkit-", name))
     }
-    unlink(outputFolder, recursive = TRUE);
-    dir.create(outputFolder, showWarnings = FALSE)
+    #unlink(outputFolder, recursive = TRUE);
+    #dir.create(outputFolder, showWarnings = FALSE)
 
     # Get bam files
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
@@ -70,7 +71,7 @@ for (name in names(datasets)) {
                  "-s", params$minGapSizeAccess,
                  "-o", file.path(outputFolder, "access.bed"))
 
-    paste(cmd);system(cmd)
+    print(cmd);system(cmd)
 
     #Autobin: Quickly estimate read counts or depths in a BAM file to estimate reasonable on- and (if relevant) off-target bin sizes.
     # cmd <- paste(condaFolder,
@@ -105,7 +106,7 @@ for (name in names(datasets)) {
                  "--target-output-bed",  file.path(outputFolder, "ROIs-ICR96-panelcnDataset.target.bed"),
                  "--antitarget-output-bed",  file.path(outputFolder, "ROIs-ICR96-panelcnDataset.antitarget.bed")
     )
-    paste(cmd);system(cmd)
+    print(cmd);system(cmd)
     dir.create(file.path(outputFolder, "calls"))
 
     for(i in seq_len(length(bamFiles))){
@@ -128,7 +129,7 @@ for (name in names(datasets)) {
                    "-q", params$minMapqCoverage,
                    file.path(outputFolder, "ROIs-ICR96-panelcnDataset.target.bed"),
                    "-o", file.path(outputFolder, paste0(sampleName[i], ".targetcoverage.cnn" )))
-      paste(cmd);system(cmd)
+      print(cmd);system(cmd)
 
       # cmd <- paste(condaFolder,
       #              "run -n", environmentName,
@@ -145,7 +146,7 @@ for (name in names(datasets)) {
                    "-q", params$minMapqCoverage,
                    file.path(outputFolder, "ROIs-ICR96-panelcnDataset.antitarget.bed"),
                    "-o", file.path(outputFolder, paste0(sampleName[i], ".antitargetcoverage.cnn" )))
-      paste(cmd); system(cmd)
+      #print(cmd); system(cmd)
     }
 
     for(i in seq_len(length(bamFiles))){
@@ -188,7 +189,7 @@ for (name in names(datasets)) {
                    file.path(outputFolder, paste0(sampleName[i], ".antitargetcoverage.cnn" )),
                    file.path(outputFolder, paste0(sampleName[i], "reference.cnn" )),
                    "-o",  file.path(outputFolder, paste0(sampleName[i], ".cnr")))
-      paste(cmd); system(cmd)
+     # paste(cmd); system(cmd)
 
 
       #Segment infer discrete copy number segments from the given coverage tamble:
@@ -209,7 +210,7 @@ for (name in names(datasets)) {
                    #"-t", params$thresehold,
                    "--drop-outliers", params$DropOutliersSegment,
                    "-o", file.path(outputFolder, paste0(sampleName[i], ".cns")))
-      paste(cmd);system(cmd)
+      #paste(cmd);system(cmd)
 
       #Segmetrics: Calculate summary statistics of the residual bin-level log2 ratio estimates from the segment means, similar to the existing metrics command, but for each segment individually.
       # cmd <- paste(condaFolder,
@@ -232,7 +233,7 @@ for (name in names(datasets)) {
                    "-b", params$bootstrapSegmetrics,
                    "-o", file.path(outputFolder, paste0(sampleName[i],"segment.cns")))
 
-      paste(cmd);system(cmd)
+      #paste(cmd);system(cmd)
 
       #call cnvs
       # cmd <- paste(condaFolder,
@@ -248,11 +249,11 @@ for (name in names(datasets)) {
                    #"srun",
                    "cnvkit.py", "call",
                    file.path(outputFolder, paste0(sampleName[i], "segment.cns")),
-                   "--filter", "ci",
+                   "--filter", params$filterCall,
                    "-m", params$methodCall,
-                   #"-t", params$thresholdsCall,
+                   paste0("-t=", params$thresholdsCall_del, params$thresholdsCall_loss, params$thresholdsCall_gain, params$thresholdsCall_amp),
                    "-o", file.path(outputFolder, paste0("calls/", sampleName[i], ".call.cns")))
-      paste(cmd);system(cmd)
+      #paste(cmd);system(cmd)
 
       #bintest
 
@@ -275,7 +276,7 @@ for (name in names(datasets)) {
                    "-a", params$alphaBintest,
                    "-o", file.path(outputFolder, paste0(sampleName[i], "bintest.cns"))
       )
-      print(cmd); system(cmd)
+      #print(cmd); system(cmd)
       # cmd <- paste(condaFolder,
       #              "run -n", environmentName,
       #              cnvkitFolder, "call",
@@ -292,7 +293,7 @@ for (name in names(datasets)) {
                    #"-t", params$thresholdsCall,
                    "-o", file.path(outputFolder, paste0("calls/", sampleName[i], "bintest.call.cns")))
 
-      print(cmd); system(cmd)
+      #print(cmd); system(cmd)
 
 
     }
