@@ -1,4 +1,4 @@
-#USAGE: Rscript optimizer.r [-t tools.yaml]  [-d dataset.yaml] [-tf include_temp_files] (call from evaluate folder)
+#USAGE: Rscript optimizer.r [-t tools.yaml]  [-d dataset.yaml] (call from evaluate folder)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 library(methods)
@@ -45,7 +45,7 @@ datasets <- yaml.load_file(args$datasets)
 
 
 for (name in names(datasets)) {
-  dataset <- datasets[[name]]
+ dataset <- datasets[[name]]
 
 for (i in seq_len(length(tools))){
 
