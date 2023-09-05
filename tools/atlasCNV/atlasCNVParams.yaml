@@ -1,3 +1,8 @@
-atlascnvFolder: /home/croca/Benchmark/CNVbenchmarkeR_all/tools/atlasCNV
+atlascnvFolder: /usr/local/opt/AtlasCNV-2023/
 contigFile: /home/croca/Benchmark/CNVbenchmarkeR_all/tools/atlasCNV/contig-ploidy-prior.tsv
+gatkFolder: /usr/local/opt/gatk-4.3.0.0
+rpath: /usr/local/opt/R-4.2.1/bin/R
+Rscript: /usr/local/opt/R-4.2.1/bin/Rscript
 
+threshold_del: -0.6
+threshold_dup: 0.4
