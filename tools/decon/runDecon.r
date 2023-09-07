@@ -72,10 +72,11 @@ deconFolder <- file.path(deconParams$deconFolder)
 # Set decon as working directory. Necessary to make decon packrat work
 currentFolder <- getwd()
 print(deconFolder)
-setwd(deconFolder)
+
 
 # go over datasets and run decon for those which are active
 for (name in names(datasets)) {
+  setwd(deconFolder)
   dataset <- datasets[[name]]
   if (dataset$include){
     print(paste("Starting DECoN for", name, "dataset", sep=" "))
@@ -89,11 +90,11 @@ for (name in names(datasets)) {
     if (!is.null(deconParams$outputFolder)) {
       if(stringr::str_detect(deconParams$outputFolder, "^./")) deconParams$outputFolder <- stringr::str_sub(deconParams$outputFolder, 3, stringr::str_length(deconParams$outputFolder))
       outputFolder <- file.path(currentFolder, deconParams$outputFolder)
-    } else
-      outputFolder <- file.path(currentFolder, "output", paste0("decon-", name))
+    } else{
+      outputFolder <- file.path(currentFolder, "output", paste0("decon-", name))}
     if (is.null(deconParams$execution) || deconParams$execution != "skipPrecalcPhase") {
-      #unlink(outputFolder, recursive = TRUE);
-      #dir.create(outputFolder)
+      unlink(outputFolder, recursive = TRUE);
+      dir.create(outputFolder)
     }
 
     print(outputFolder)
