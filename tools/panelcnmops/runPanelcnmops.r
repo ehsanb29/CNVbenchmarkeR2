@@ -56,7 +56,7 @@ for (name in names(datasets)) {
     if (!is.null(params$outputFolder)) {
       outputFolder <- params$outputFolder
     } else
-      outputFolder <- file.path(getwd(), "output", paste0("panelcn-", name))
+      outputFolder <- file.path(getwd(), "output", paste0("panelcnmops-", name))
     if (is.null(params$execution) || params$execution != "skipPrecalcPhase") {
       unlink(outputFolder, recursive = TRUE);
       dir.create(outputFolder)
@@ -184,7 +184,7 @@ for (name in names(datasets)) {
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE)
-      filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+      filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
       do.call(unlink, filesToRemove)
     }
