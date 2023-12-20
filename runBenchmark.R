@@ -4,7 +4,7 @@
 # libs
 library("optparse")
 library(yaml)
-
+start.benchmark <- format(Sys.time(), "%X_%Y")
 # Check runBenchmark.R is being called from CNVbenchmarkeR2 folder
 if (length(list.files(pattern = "runBenchmark.R"))== 0){
   cat("Sorry, runBenchmark.R should be called from CNVbenchmarkeR2 folder\n")
@@ -28,7 +28,7 @@ tools <- yaml.load_file(args$tools)
 
 
 
-# create logs/output folder if not exists
+#create logs/output folder if not exists
 dir.create("logs", showWarnings = F)
 dir.create("output", showWarnings = F)
 
@@ -38,86 +38,92 @@ dir.create("output", showWarnings = F)
 # Panelcn.mops
 if (tools$panelcnmops == T){
   cat(as.character(Sys.time()), " - Executing panelcn.MOPS\n")
-  cmd <- paste("Rscript tools/panelcnmops/runPanelcnmops.r tools/panelcnmops/panelcnmopsParams.yaml", args$datasets, args$include_temp_files, " > logs/panelcnmops.log 2>&1")
+  cmd <- paste("Rscript tools/panelcnmops/runPanelcnmops.r tools/panelcnmops/panelcnmopsParams.yaml", args$datasets, args$include_temp_files, " >",  paste0("logs/panelcnmops_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # Decon
 if (tools$decon == T){
   cat(as.character(Sys.time()), " - Executing DECoN\n")
-  cmd <- paste("Rscript tools/decon/runDecon.r tools/decon/deconParams.yaml", args$datasets, args$include_temp_files, " > logs/decon.log 2>&1")
+  cmd <- paste("Rscript tools/decon/runDecon.r tools/decon/deconParams.yaml", args$datasets, args$include_temp_files, " >",  paste0("logs/decon_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # ExomeDepth
 if (tools$exomedepth == T){
   cat(as.character(Sys.time()), " - Executing ExomeDepth\n")
-  cmd <- paste("Rscript tools/exomedepth/runExomedepth.r tools/exomedepth/exomedepthParams.yaml", args$datasets, args$include_temp_files," > logs/exomedepth.log 2>&1")
+  cmd <- paste("Rscript tools/exomedepth/runExomedepth.r tools/exomedepth/exomedepthParams.yaml", args$datasets, args$include_temp_files," >",  paste0("logs/exomedepth_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # CODEX2
 if (tools$codex2 == T){
   cat(as.character(Sys.time()), " - Executing CODEX2\n")
-  cmd <- paste("Rscript tools/codex2/runCodex2.r tools/codex2/codex2Params.yaml", args$datasets, args$include_temp_files," > logs/codex2.log 2>&1")
+  cmd <- paste("Rscript tools/codex2/runCodex2.r tools/codex2/codex2Params.yaml", args$datasets, args$include_temp_files," >",  paste0("logs/codex2_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # ClinCNV
 if (tools$clincnv == T){
   cat(as.character(Sys.time()), " - Executing ClinCNV\n")
-  cmd <- paste("Rscript tools/clincnv/runClincnv.R tools/clincnv/clincnvParams.yaml", args$datasets, args$include_temp_files, " > logs/clincnv.log 2>&1")
+  cmd <- paste("Rscript tools/clincnv/runClincnv.R tools/clincnv/clincnvParams.yaml", args$datasets, args$include_temp_files, " >",  paste0("logs/clincnv_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # CoNVaDING
 if (tools$convading == T){
   cat(as.character(Sys.time()), " - Executing CoNVaDING\n")
-  cmd <- paste("Rscript tools/convading/runConvading.r tools/convading/convadingParams.yaml", args$datasets, args$include_temp_files," > logs/convading.log 2>&1")
+  cmd <- paste("Rscript tools/convading/runConvading.r tools/convading/convadingParams.yaml", args$datasets, args$include_temp_files," >",  paste0("logs/convading_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 # Cobalt
 if (tools$cobalt == T){
   cat(as.character(Sys.time()), " - Executing Cobalt\n")
-  cmd <- paste("Rscript tools/cobalt/runCobalt.r tools/cobalt/cobaltParams.yaml", args$datasets, args$include_temp_files," > logs/cobalt.log 2>&1")
+  cmd <- paste("Rscript tools/cobalt/runCobalt.r tools/cobalt/cobaltParams.yaml", args$datasets, args$include_temp_files," >",  paste0("logs/cobalt_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # ClearCNV
 if (tools$clearCNV == T){
   cat(as.character(Sys.time()), " - Executing clearCNV\n")
-  cmd <- paste("Rscript tools/clearCNV/runClearCNV.r tools/clearCNV/clearCNVParams.yaml", args$datasets, args$include_temp_files," > logs/clearCNV.log 2>&1")
+  cmd <- paste("Rscript tools/clearCNV/runClearCNV.r tools/clearCNV/clearCNVParams.yaml", args$datasets, args$include_temp_files," >",  paste0("logs/clearCNV_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # Cnvkit
 if (tools$cnvkit == T){
   cat(as.character(Sys.time()), " - Executing cnvkit\n")
-  cmd <- paste("Rscript tools/cnvkit/runCnvkit.r tools/cnvkit/cnvkitParams.yaml", args$datasets, args$include_temp_files," > logs/cnvkit.log 2>&1")
+  cmd <- paste("Rscript tools/cnvkit/runCnvkit.r tools/cnvkit/cnvkitParams.yaml", args$datasets, args$include_temp_files," >",  paste0("logs/cnvkit_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # GermlineCNVcaller
 if (tools$germlineCNVcaller == T){
   cat(as.character(Sys.time()), " - Executing germlineCNVcaller\n")
-  cmd <- paste("Rscript tools/germlineCNVcaller/runGermlinecnvcaller.r tools/germlineCNVcaller/germlinecnvcallerParams.yaml", args$datasets, args$include_temp_files," > logs/germlineCNVcaller.log 2>&1")
+  cmd <- paste("Rscript tools/germlineCNVcaller/runGermlineCNVcaller.r tools/germlineCNVcaller/germlineCNVcallerParams.yaml", args$datasets, args$include_temp_files," >",  paste0("logs/germlineCNVcaller_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # Viscap
 if (tools$viscap == T){
   cat(as.character(Sys.time()), " - Executing Viscap\n")
-  cmd <- paste("Rscript tools/viscap/runVisCap.r tools/viscap/viscapParams.yaml", args$datasets, args$include_temp_files, "false", ">  logs/viscap.log 2>&1")
+  cmd <- paste("Rscript tools/viscap/runVisCap.r tools/viscap/viscapParams.yaml", args$datasets, args$include_temp_files, "false", ">",  paste0("logs/viscap_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
 # AtlasCNV
 if (tools$atlasCNV == T){
   cat(as.character(Sys.time()), " - Executing Atlas-CNV\n")
-  cmd <- paste("Rscript tools/atlasCNV/runAtlascnv.r tools/atlasCNV/atlasCNVParams.yaml", args$datasets, args$include_temp_files, "false", ">  logs/atlasCNV.log 2>&1")
+  cmd <- paste("Rscript tools/atlasCNV/runAtlascnv.r tools/atlasCNV/atlasCNVParams.yaml", args$datasets, args$include_temp_files, "false", ">",  paste0("logs/atlasCNV_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
+# CNVZ
+if (tools$CNVZ == T){
+  cat(as.character(Sys.time()), " - Executing CNV-Z\n")
+  cmd <- paste("Rscript tools/CNVZ/runCNVZ.r tools/CNVZ/CNVZParams.yaml", args$datasets, args$include_temp_files, "false", ">",  paste0("logs/CNVZ_", start.benchmark, ".log 2>&1"))
+  system(cmd)
+}
 
 
 
@@ -125,5 +131,5 @@ if (tools$atlasCNV == T){
 ##  Generate summary file  ##
 
 cat(as.character(Sys.time()), " - Generating summary file")
-cmd <- paste("Rscript utils/summary.r", args$tools, args$datasets, "> logs/summary.log 2>&1")
+cmd <- paste("Rscript utils/summary.r", args$tools, args$datasets, ">",  paste0("logs/summary_", start.benchmark, ".log 2>&1"))
 system(cmd)
