@@ -100,7 +100,7 @@ if (tools$cnvkit == T){
 # GermlineCNVcaller
 if (tools$germlineCNVcaller == T){
   cat(as.character(Sys.time()), " - Executing germlineCNVcaller\n")
-  cmd <- paste("Rscript tools/germlineCNVcaller/runGermlineCNVcaller.r tools/germlineCNVcaller/germlineCNVcallerParams.yaml", args$datasets, args$include_temp_files," >",  paste0("logs/germlineCNVcaller_", start.benchmark, ".log 2>&1"))
+  cmd <- paste("Rscript tools/germlineCNVcaller/runGermlineCNVcaller.r tools/germlineCNVcaller/germlineCNVcallerParams.yaml", args$datasets, args$include_temp_files,"false"," >",  paste0("logs/germlineCNVcaller_", start.benchmark, ".log 2>&1"))
   system(cmd)
 }
 
