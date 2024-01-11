@@ -111,14 +111,14 @@ for (name in names(datasets)) {
 
     # Get bam files
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
-
+print(evaluateParameters)
     readCountsFolder <- ifelse(evaluateParameters=="false",
                                   file.path(outputFolder, "ReadCounts"),
                                   paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/ReadCounts"))
+print(readCountsFolder)
+    if(!dir.exists(readCountsFolder)| dir.exists(readCountsFolder) &&  length(list.files(readCountsFolder))!=length(bamFiles)){
 
-    if(!dir.exists(readCountsFolder)| dir.exists(readCountsFolder) &&  length(list.files(depthCoverageFolder))!=length(bamFiles)){
-
-      dir.create(depthCoverageFolder, showWarnings = FALSE)
+      dir.create(readCountsFolder, showWarnings = FALSE)
     print(paste("Starting at", Sys.time(), "collect Read counts"))
     for (bam in bamFiles){
       print(basename(bam))
@@ -173,145 +173,145 @@ for (name in names(datasets)) {
     #
     #
     # #GATK: Run GermlineCNVcaller ----
-#      cnvRaw <- file.path(paste0(outputFolder, "/cnvRaw"))
-#      if (!file.exists(cnvRaw)){
-#        dir.create(cnvRaw)
-#      } else {
-#        unlink(cnvRaw, recursive = TRUE)
-#        dir.create(cnvRaw, recursive=TRUE)
-#      }
-#      print(paste("Starting at", Sys.time(), "GermlienCNVCaller"))
-#      cmd_GermlineCNVCaller<- paste0( "apptainer run ",
-#                                      #"-B ", currentFolder, " ",
-#                                      "-B  /data ",
-#                                      singularityFolder,
-#                                      ' gatk --java-options "-Xmx30G" GermlineCNVCaller ',
-#                                      " --run-mode COHORT",
-#                                      " -L ", interval_list,
-#                                      " --interval-merging-rule OVERLAPPING_ONLY",
-#                                      " --contig-ploidy-calls ", contigPloidy, "/contig-calls",
-#                                      " -I ", all_hdf5_names,
-#                                      " -O ", cnvRaw,
-#                                      " --output-prefix cohort_run",
-#                                      #optional parameters
-#                                       " --p-active ", params$pActive,
-#                                       " --p-alt ", params$pAlt,
-#                                       " --sample-psi-scale ", params$samplePsiScale,
-#                                       " --mapping-error-rate ", params$mappingErrorRate,
-#                                       " --class-coherence-length ", params$classCoherenceLength,
-#                                       " --cnv-coherence-length ", params$cnvCoherenceLength,
-#                                       " --interval-psi-scale ", params$intervalPsiScale,
-#                                       " --active-class-padding-hybrid-mode ", params$activeClassPaddingHybridMode,
-#                                       " --adamax-beta-1 ", params$adamaxBeta1,
-#                                       " --adamax-beta-2 ", params$adamaxBeta2,
-#                                       " --caller-external-admixing-rate ", params$callerExternalAdmixingRate,
-#                                       " --caller-internal-admixing-rate ", params$callerInternalAdmixingRate,
-#                                       " --caller-update-convergence-threshold ", params$callerUpdateConvergenceThreshold,
-#                                       " --convergence-snr-averaging-window ", params$convergenceSnrAveragingWindow,
-#                                       " --convergence-snr-countdown-window ", params$convergenceSnrCountdownWindow,
-#                                       " --convergence-snr-trigger-threshold ", params$convergenceSnrTriggerThreshold,
-#                                       " --depth-correction-tau ", params$depthCorrectionTau,
-#                                       " --enable-bias-factors ", params$enableBiasFactors,
-#                                       " --init-ard-rel-unexplained-variance ", params$initArdRelUnexplainedVariance,
-#                                       " --learning-rate ", params$learningRate,
-#                                       " --log-emission-samples-per-round ", params$logEmissionSamplesPerRound,
-#                                       " --log-emission-sampling-median-rel-error ", params$logEmissionSamplingMedianRelError,
-#                                       " --log-emission-sampling-rounds ", params$logEmissionSamplingRounds,
-#                                       " --log-mean-bias-standard-deviation ", params$logMeanBiasStandardDeviation,
-#                                       #" --interval-merging-rule ", params$intervalMergingRule,
-#                                       " --interval-set-rule ", params$intervalSetRule,
-#                                       " --num-samples-copy-ratio-approx ", params$numSamplesCopyRatioApprox,
-#                                       " --num-thermal-advi-iters ", params$numThermalAdviIters,
-#                                       " --interval-exclusion-padding ", params$intervalExclusionPaddingG,
-#                                       " --interval-padding ", params$intervalPaddingG,
-#                                       " --copy-number-posterior-expectation-mode ", params$copyNumberPosteriorExpectationMode,
-#                                       " --gc-curve-standard-deviation ", params$gcCurveStandardDeviation,
-#                                       " --max-bias-factors ", params$maxBiasFactors,
-#                                       " --max-calling-iters ", params$maxCallingIters,
-#                                       " --max-advi-iter-first-epoch ", params$maxAdviIterFirstEpoch,
-#                                       " --max-advi-iter-subsequent-epochs ", params$maxAdviIterSubsequentEpochs,
-#                                       " --max-training-epochs ", params$maxTrainingEpochs,
-#                                       " --min-training-epochs ", params$minTrainingEpochs,
-#                                       " --use-jdk-deflater ", params$useJdkDeflater,
-#                                       " --use-jdk-inflater ", params$useJdkInflater,
-#                                       " --disable-annealing ", params$disableAnnealing,
-#                                       " --disable-caller ", params$disableCaller,
-#                                       " --disable-sampler ", params$disableSampler
-#                                      )
+     cnvRaw <- file.path(paste0(outputFolder, "/cnvRaw"))
+     if (!file.exists(cnvRaw)){
+       dir.create(cnvRaw)
+     } else {
+       unlink(cnvRaw, recursive = TRUE)
+       dir.create(cnvRaw, recursive=TRUE)
+     }
+     print(paste("Starting at", Sys.time(), "GermlienCNVCaller"))
+     cmd_GermlineCNVCaller<- paste0( "apptainer run ",
+                                     #"-B ", currentFolder, " ",
+                                     "-B  /data ",
+                                     singularityFolder,
+                                     ' gatk --java-options "-Xmx30G" GermlineCNVCaller ',
+                                     " --run-mode COHORT",
+                                     " -L ", interval_list,
+                                     " --interval-merging-rule OVERLAPPING_ONLY",
+                                     " --contig-ploidy-calls ", contigPloidy, "/contig-calls",
+                                     " -I ", all_hdf5_names,
+                                     " -O ", cnvRaw,
+                                     " --output-prefix cohort_run",
+                                     #optional parameters
+                                      " --p-active ", params$pActive,
+                                      " --p-alt ", params$pAlt,
+                                      " --sample-psi-scale ", params$samplePsiScale,
+                                      " --mapping-error-rate ", params$mappingErrorRate,
+                                      " --class-coherence-length ", params$classCoherenceLength,
+                                      " --cnv-coherence-length ", params$cnvCoherenceLength,
+                                      " --interval-psi-scale ", params$intervalPsiScale,
+                                      " --active-class-padding-hybrid-mode ", params$activeClassPaddingHybridMode,
+                                      " --adamax-beta-1 ", params$adamaxBeta1,
+                                      " --adamax-beta-2 ", params$adamaxBeta2,
+                                      " --caller-external-admixing-rate ", params$callerExternalAdmixingRate,
+                                      " --caller-internal-admixing-rate ", params$callerInternalAdmixingRate,
+                                      " --caller-update-convergence-threshold ", params$callerUpdateConvergenceThreshold,
+                                      " --convergence-snr-averaging-window ", params$convergenceSnrAveragingWindow,
+                                      " --convergence-snr-countdown-window ", params$convergenceSnrCountdownWindow,
+                                      " --convergence-snr-trigger-threshold ", params$convergenceSnrTriggerThreshold,
+                                      " --depth-correction-tau ", params$depthCorrectionTau,
+                                      " --enable-bias-factors ", params$enableBiasFactors,
+                                      " --init-ard-rel-unexplained-variance ", params$initArdRelUnexplainedVariance,
+                                      " --learning-rate ", params$learningRate,
+                                      " --log-emission-samples-per-round ", params$logEmissionSamplesPerRound,
+                                      " --log-emission-sampling-median-rel-error ", params$logEmissionSamplingMedianRelError,
+                                      " --log-emission-sampling-rounds ", params$logEmissionSamplingRounds,
+                                      " --log-mean-bias-standard-deviation ", params$logMeanBiasStandardDeviation,
+                                      #" --interval-merging-rule ", params$intervalMergingRule,
+                                      " --interval-set-rule ", params$intervalSetRule,
+                                      " --num-samples-copy-ratio-approx ", params$numSamplesCopyRatioApprox,
+                                      " --num-thermal-advi-iters ", params$numThermalAdviIters,
+                                      " --interval-exclusion-padding ", params$intervalExclusionPaddingG,
+                                      " --interval-padding ", params$intervalPaddingG,
+                                      " --copy-number-posterior-expectation-mode ", params$copyNumberPosteriorExpectationMode,
+                                      " --gc-curve-standard-deviation ", params$gcCurveStandardDeviation,
+                                      " --max-bias-factors ", params$maxBiasFactors,
+                                      " --max-calling-iters ", params$maxCallingIters,
+                                      " --max-advi-iter-first-epoch ", params$maxAdviIterFirstEpoch,
+                                      " --max-advi-iter-subsequent-epochs ", params$maxAdviIterSubsequentEpochs,
+                                      " --max-training-epochs ", params$maxTrainingEpochs,
+                                      " --min-training-epochs ", params$minTrainingEpochs,
+                                      " --use-jdk-deflater ", params$useJdkDeflater,
+                                      " --use-jdk-inflater ", params$useJdkInflater,
+                                      " --disable-annealing ", params$disableAnnealing,
+                                      " --disable-caller ", params$disableCaller,
+                                      " --disable-sampler ", params$disableSampler
+                                     )
+
+     print(cmd_GermlineCNVCaller);system(cmd_GermlineCNVCaller);
+
+##GATK: Run PostprocessingGermlineCNVcaller
 #
-#      print(cmd_GermlineCNVCaller);system(cmd_GermlineCNVCaller);
-#
-# ##GATK: Run PostprocessingGermlineCNVcaller
-# #
-#      cnvProcessed <- file.path(paste0(outputFolder, "/cnvProcessed"))
-#     if (!file.exists(cnvProcessed)){
-#       dir.create(cnvProcessed)
-#     } else {
-#       unlink(cnvProcessed, recursive = TRUE)
-#       dir.create(cnvProcessed, recursive=TRUE)
-#     }
-#
-#      callsRaw <- list.dirs(path=paste0(cnvRaw,"/cohort_run-calls"),  full.names = TRUE, recursive= FALSE)
-#      ploidyRaw <- list.dirs(path=paste0(contigPloidy,"/contig-calls"),  full.names = TRUE, recursive= FALSE)
-#     print(callsRaw)
-#     print(paste("Starting at", Sys.time(), "Germline postProcess"))
-#      for (i in 1:length(callsRaw)){
-#        cmd_GermlineCNVCaller<- paste0( "apptainer run ",
-#                                        #"-B ", currentFolder, " ",
-#                                        "-B  /data ",
-#                                        singularityFolder,
-#                                        ' gatk --java-options "-Xmx30G" PostprocessGermlineCNVCalls',
-#                                        " --sample-index ",  i-1,
-#                                        " --calls-shard-path ",paste0(cnvRaw,"/cohort_run-calls") ,
-#                                        " --contig-ploidy-calls ", paste0(contigPloidy,"/contig-calls"),
-#                                        " --model-shard-path ", paste0(cnvRaw,"/cohort_run-model"),
-#                                        " --output-genotyped-intervals ", cnvProcessed, "/SAMPLE_", i-1   ,"_genotyped_intervals.vcf ",
-#                                        " --output-genotyped-segments ", cnvProcessed, "/SAMPLE_", i-1  ,"_genotyped_segments.vcf ",
-#                                        " --output-denoised-copy-ratios ", cnvProcessed, "/SAMPLE_", i-1 ,"_denoised_copy_ratios.tsv",
-#
-#                                        #optional
-#                                         " --interval-exclusion-padding ", params$intervalExclusionPaddingPp,
-#                                         " --interval-padding ", params$intervalPaddingPp
-#
-#        )
-#        print(cmd_GermlineCNVCaller);system(cmd_GermlineCNVCaller)
-#      }
-#
-#
-# #format them as benchmark desired output
-#
-#
-#
-# #Put all results in the same file  BOOOOO
-#      resultsFiles <- list.files(path=cnvProcessed, pattern="_genotyped_segments.vcf$", full.names = TRUE, recursive= TRUE)
-#      cnvData  <- data.frame()
-#      for(i in seq_len(length(resultsFiles))){
-#        vcf <-vcfR::read.vcfR(resultsFiles[i])
-#        sample.name <- (vcf@gt %>% colnames())[2]
-#        cnvs_proc <- vcfR::vcfR2tidy(vcf, single_frame = TRUE)$dat %>%
-#          dplyr::rowwise() %>%
-#          mutate(sample=sample.name)%>%
-#          dplyr::filter(ALT != ".") %>%
-#          dplyr::mutate(copy_number = ifelse(ALT == "<DEL>",  "deletion", ifelse(ALT=="<DUP>","duplication", "")),
-#                        start = POS %>% as.integer(), end = END %>% as.integer())
-#        cnvData <- rbind(cnvData, cnvs_proc)
-#
-#      }
-#
-#      outputFile <- file.path(outputFolder, "all_cnv_calls.txt")
-#      write.table(cnvData, file = outputFile, sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
-#
-#      saveResultsFileToGR(outputFolder, "all_cnv_calls.txt", chrColumn = "CHROM", sampleColumn = "sample",
-#                          startColumn = "start", endColumn = "end", cnvTypeColumn = "copy_number")
-#
-#      #Delete temporary files if specified
-#      if(includeTempFiles == "false"){
-#        filesAll <- list.files(outputFolder, full.names = TRUE)
-#        filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-#        filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
-#        do.call(unlink, filesToRemove)
-#      }
-#
+     cnvProcessed <- file.path(paste0(outputFolder, "/cnvProcessed"))
+    if (!file.exists(cnvProcessed)){
+      dir.create(cnvProcessed)
+    } else {
+      unlink(cnvProcessed, recursive = TRUE)
+      dir.create(cnvProcessed, recursive=TRUE)
+    }
+
+     callsRaw <- list.dirs(path=paste0(cnvRaw,"/cohort_run-calls"),  full.names = TRUE, recursive= FALSE)
+     ploidyRaw <- list.dirs(path=paste0(contigPloidy,"/contig-calls"),  full.names = TRUE, recursive= FALSE)
+    print(callsRaw)
+    print(paste("Starting at", Sys.time(), "Germline postProcess"))
+     for (i in 1:length(callsRaw)){
+       cmd_GermlineCNVCaller<- paste0( "apptainer run ",
+                                       #"-B ", currentFolder, " ",
+                                       "-B  /data ",
+                                       singularityFolder,
+                                       ' gatk --java-options "-Xmx30G" PostprocessGermlineCNVCalls',
+                                       " --sample-index ",  i-1,
+                                       " --calls-shard-path ",paste0(cnvRaw,"/cohort_run-calls") ,
+                                       " --contig-ploidy-calls ", paste0(contigPloidy,"/contig-calls"),
+                                       " --model-shard-path ", paste0(cnvRaw,"/cohort_run-model"),
+                                       " --output-genotyped-intervals ", cnvProcessed, "/SAMPLE_", i-1   ,"_genotyped_intervals.vcf ",
+                                       " --output-genotyped-segments ", cnvProcessed, "/SAMPLE_", i-1  ,"_genotyped_segments.vcf ",
+                                       " --output-denoised-copy-ratios ", cnvProcessed, "/SAMPLE_", i-1 ,"_denoised_copy_ratios.tsv",
+
+                                       #optional
+                                        " --interval-exclusion-padding ", params$intervalExclusionPaddingPp,
+                                        " --interval-padding ", params$intervalPaddingPp
+
+       )
+       print(cmd_GermlineCNVCaller);system(cmd_GermlineCNVCaller)
+     }
+
+
+#format them as benchmark desired output
+
+
+
+#Put all results in the same file  BOOOOO
+     resultsFiles <- list.files(path=cnvProcessed, pattern="_genotyped_segments.vcf$", full.names = TRUE, recursive= TRUE)
+     cnvData  <- data.frame()
+     for(i in seq_len(length(resultsFiles))){
+       vcf <-vcfR::read.vcfR(resultsFiles[i])
+       sample.name <- (vcf@gt %>% colnames())[2]
+       cnvs_proc <- vcfR::vcfR2tidy(vcf, single_frame = TRUE)$dat %>%
+         dplyr::rowwise() %>%
+         mutate(sample=sample.name)%>%
+         dplyr::filter(ALT != ".") %>%
+         dplyr::mutate(copy_number = ifelse(ALT == "<DEL>",  "deletion", ifelse(ALT=="<DUP>","duplication", "")),
+                       start = POS %>% as.integer(), end = END %>% as.integer())
+       cnvData <- rbind(cnvData, cnvs_proc)
+
+     }
+
+     outputFile <- file.path(outputFolder, "all_cnv_calls.txt")
+     write.table(cnvData, file = outputFile, sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
+
+     saveResultsFileToGR(outputFolder, "all_cnv_calls.txt", chrColumn = "CHROM", sampleColumn = "sample",
+                         startColumn = "start", endColumn = "end", cnvTypeColumn = "copy_number")
+
+     #Delete temporary files if specified
+     if(includeTempFiles == "false"){
+       filesAll <- list.files(outputFolder, full.names = TRUE)
+       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+       do.call(unlink, filesToRemove)
+     }
+
   }
   }
 #
