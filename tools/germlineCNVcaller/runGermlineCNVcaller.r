@@ -97,7 +97,11 @@ for (name in names(datasets)) {
 
     # Interval list----
     #create intervals file (.intervals_list) from .bed file
-    interval_list<-paste0(outputFolder,"/list.interval_list")
+    #interval_list<-paste0(outputFolder,"/list.interval_list")
+    interval_list <- ifelse(evaluateParameters=="false",
+                            paste0(outputFolder,"/list.interval_list"),
+                            paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/list.interval_list"))
+    
     if(!file.exists(interval_list)){
       cmd_interval <- paste0( " java -jar ", picardFolder,
                               " BedToIntervalList",
@@ -114,7 +118,7 @@ for (name in names(datasets)) {
 print(evaluateParameters)
     readCountsFolder <- ifelse(evaluateParameters=="false",
                                   file.path(outputFolder, "ReadCounts"),
-                                  paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/ReadCounts"))
+                                  paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/ReadCounts"))
 print(readCountsFolder)
     if(!dir.exists(readCountsFolder)| dir.exists(readCountsFolder) &&  length(list.files(readCountsFolder))!=length(bamFiles)){
 
@@ -147,7 +151,7 @@ print(readCountsFolder)
     #contigPloidy <- file.path(paste0(outputFolder, "/contigPloidy"))
     contigPloidy <- ifelse(evaluateParameters=="false",
                                file.path(outputFolder, "contigPloidy"),
-                               paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/contigPloidy"))
+                               paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/contigPloidy"))
 
     #contigPloidy <- file.path(paste0(paste0("/data/croca_data/CNVbenchmarkeR2/output/germlineCNVcaller-", name), "/contigPloidy"))
     if(!dir.exists(contigPloidy)){
