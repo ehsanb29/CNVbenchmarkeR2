@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=2720
+#SBATCH --time=4000
 #SBATCH --mem=3GB
 #SBATCH --nodes=1
 #SBATCH --job-name="TEST"
