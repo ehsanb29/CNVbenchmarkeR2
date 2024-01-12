@@ -47,10 +47,10 @@ datasets <- yaml.load_file(args$datasets)
 for (name in names(datasets)) {
  dataset <- datasets[[name]]
 
-for (i in seq_len(length(tools))){
+for (m in seq_len(length(tools))){
 
-  if(isTRUE(tools[[i]])){
-    algName <- names(tools[i])
+  if(isTRUE(tools[[m]])){
+    algName <- names(tools[m])
 
     #create a folder for the dataset
     folder_name <- file.path(algName, name)
