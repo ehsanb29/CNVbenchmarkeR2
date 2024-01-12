@@ -154,7 +154,7 @@ for (name in names(datasets)) {
 
       for(j in seq_len(length(filesParams))){
 
-      print(j)
+      #print(j)
       num.tool <- which(stringr::str_detect(tools.run, algName))
       # query<- paste(tools.run[num.tool],
       #       filesParams[j],
