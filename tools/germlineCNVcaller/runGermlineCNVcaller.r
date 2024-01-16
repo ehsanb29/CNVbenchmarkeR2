@@ -101,7 +101,7 @@ for (name in names(datasets)) {
     interval_list <- ifelse(evaluateParameters=="false",
                             paste0(outputFolder,"/list.interval_list"),
                             paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/list.interval_list"))
-    
+
     if(!file.exists(interval_list)){
       cmd_interval <- paste0( " java -jar ", picardFolder,
                               " BedToIntervalList",
@@ -314,6 +314,9 @@ print(readCountsFolder)
        filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
        filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
        do.call(unlink, filesToRemove)
+       foldersToRemove <- list.dirs(outputFolder, full.names = TRUE, recursive = FALSE)
+       unlink(foldersToRemove, recursive = TRUE)
+
      }
 
   }
