@@ -2,7 +2,6 @@ viscapFolder: /home/croca/VisCap
 #viscapFolder: /home/emunte/tools/VisCap
 #gatkFolder: /home/emunte/tools/gatk-4.3.0.0
 gatkFolder: /usr/local/opt/gatk-4.3.0.0
-#viscapConfig : /media/emunte/Elements1/CNV_benchmark/cluster/tools/viscap/VisCap.cfg
 picardJar: /usr/local/opt/picard-2.27.4/jar/picard.jar
 
 # default
