@@ -5,8 +5,8 @@ minGapSizeAccess: 5000 #Minimum gap size between accessible sequence regions. Re
 bpPerBinAutobin: 100000.0 #Desired average number of sequencing read bases mapped to each bin.
 targetMaxSizeAutobin: 20000 #Maximum size of target bins
 targetMinSizeAutobin: 20 #Minimum size of target bins
-antitargetMaxSizeAutobin: 500000 #Maximum size of antitarget bins
-antitargetMinSizeAutobin: 500 #Minimum size of antitarget bins
+atargMaxSizeAutobin: 500000 #Maximum size of antitarget bins
+atargMinSizeAutobin: 500 #Minimum size of antitarget bins
 minMapqCoverage: 0 #Minimum mapping quality score (phred scale 0-60) to count a read for coverage depth.
 minClusterSizeReference: 4 #Minimum cluster size to keep in reference profiles.
 DropOutliersSegment: 10 # Drop outlier bins more than this many multiples of the 95th quantile away from the average within a rolling window. Set to 0 for no outlier filtering. 
