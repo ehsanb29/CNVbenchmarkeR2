@@ -73,8 +73,8 @@ for (name in names(datasets)) {
                  "-b", params$bpPerBinAutobin,
                  "--target-max-size", params$targetMaxSizeAutobin,
                  "--target-min-size", params$targetMinSizeAutobin,
-                 "--antitarget-max-size", params$antitargetMaxSizeAutobin,
-                 "--antitarget-min-size", params$antitargetMinSizeAutobin,
+                 "--antitarget-max-size", params$atargMaxSizeAutobin,
+                 "--antitarget-min-size", params$atargMinSizeAutobin,
                  "--target-output-bed",  file.path(outputFolder, "ROIs-ICR96-panelcnDataset.target.bed"),
                  "--antitarget-output-bed",  file.path(outputFolder, "ROIs-ICR96-panelcnDataset.antitarget.bed")
     )
@@ -165,7 +165,7 @@ for (name in names(datasets)) {
                    file.path(outputFolder, paste0(sampleName[i], "segment.cns")),
                    "--filter", params$filterCall,
                    "-m", params$methodCall,
-                   paste0("-t=", params$thresholdsCall_del, params$thresholdsCall_loss, params$thresholdsCall_gain, params$thresholdsCall_amp),
+                   paste0("-t=", params$thresholdsCall_del, ",", params$thresholdsCall_loss, ",", params$thresholdsCall_gain, ",", params$thresholdsCall_amp),
                    "-o", file.path(outputFolder, paste0("calls/", sampleName[i], ".call.cns")))
       paste(cmd);system(cmd)
 
