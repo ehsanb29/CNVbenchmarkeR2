@@ -24,6 +24,7 @@ params <- yaml.load_file(cobaltParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
+#Get cobalt folder
 cobaltFolder <- file.path(params$cobaltFolder)
 
 
@@ -45,8 +46,8 @@ for (name in names(datasets)) {
     } else {
       outputFolder <- file.path(getwd(), "output", paste0("cobalt-", name))
     }
-    unlink(outputFolder, recursive = TRUE);
-    dir.create(outputFolder, showWarnings = FALSE)
+    unlink(outputFolder, recursive = TRUE); #delete the folder if exists
+    dir.create(outputFolder, showWarnings = FALSE) #create the folder
 
 
     # Read bamfiles and sample names
@@ -58,7 +59,6 @@ for (name in names(datasets)) {
     dir.create(file.path(outputFolder, "coverage"), showWarnings = FALSE)
     allCov <- file.path(outputFolder, "coverage/samples_coverages.bed")
     cmd <- paste( ".", cobaltFolder, "\n",
-                  #"srun",
                   "covcounter",
                   "--bed", bedFile,
                   "--bams",  paste(bamFiles, collapse = " "),
@@ -82,14 +82,7 @@ for (name in names(datasets)) {
       #Extract the coverages of all the samples except the one of interest  and store the results in a bed file
       trainingSamples <- bamFiles[-i]
       trainingSamplesName <-  samplesName[-i]
-      # # Coverage for training model: Select params$training_samples (default: 50) random samples to compute the model, excluding the sample of interest from the training
-      # set.seed(123)
-      # randomSamples <- sample(c(1:length(bamFiles))[-i], params$training_samples, replace = FALSE)
-      # trainingSamples <- bamFiles[randomSamples]
-      # trainingSamplesName <-  samplesName[randomSamples]
-      #
 
-      # Extract the coverages of the 50 samples randomly selected and store the results in a bed file
       covFile <- allCovFile %>%
         dplyr::select( "X.chrom" , "start", "end", contains(trainingSamplesName)) %>%
         dplyr::rename("#chrom" = X.chrom)
@@ -100,14 +93,12 @@ for (name in names(datasets)) {
                   quote=FALSE,
                   row.names = FALSE)
 
-
       # Create training directory
       dir.create(file.path(outputFolder, "training"), showWarnings = FALSE)
 
-      # Build the model with the training samples (n=50)
+      # Build the model with all the samples except the one of interest
       trainingModel <- file.path(outputFolder, paste0("training/training_model", samplesName[i], ".model"))
       cmd <- paste(".", cobaltFolder, "\n",
-                   #"srun",
                    "cobalt", "train",
                    "--depths", trainingCov,
                    "-o", trainingModel,
@@ -143,21 +134,11 @@ for (name in names(datasets)) {
       # Execute the model with a bed output format
       testResults <- file.path(outputFolder, paste0("test/results/test", samplesName[i], "_results.bed"))
       cmd <- paste(".", cobaltFolder, "\n",
-                   #"srun",
                    "cobalt", "predict",
                    "-m", trainingModel,
                    "-d", testCov,
                    "-o", testResults)
       print(cmd); system(cmd);
-
-      # Execute the model with a vcf file output
-      #testResultsvcf <- file.path(outputFolder, paste0("test/results/test", samplesName[i], "_results.vcf"))
-      # cmd <- paste(file.path(cobaltFolder, "cobalt"), "predict",
-      #              "-m", trainingModel,
-      #              "-d", testCov,
-      #              "-o", testResultsvcf,
-      #              "--vcf",
-      #              "--reference", fastaFile)
 
 
       # Merge results of all samples in cnvData----
@@ -193,7 +174,6 @@ for (name in names(datasets)) {
       res <- as.data.frame(IRanges::subsetByOverlaps(bedGR, cnvGR)) %>%
         dplyr::mutate(copy_number = cnvGR$copy_number,
                       quality = cnvGR$quality,
-                      #width = cnvGR$width,
                       targets = cnvGR$targets,
                       Sample = resultsGR$Sample[i]) %>%
         dplyr::group_by(name, Sample, seqnames) %>%
@@ -228,7 +208,7 @@ for (name in names(datasets)) {
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
-      filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+      filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
       do.call(unlink, filesToRemove)
     }
