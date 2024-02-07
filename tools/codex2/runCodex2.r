@@ -163,10 +163,6 @@ params <- yaml.load_file(codex2ParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
-# extract codex2 params
-#codex2Folder <- file.path(params$codex2Folder)
-
-
 # go over datasets and run codex2 for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
@@ -317,7 +313,7 @@ for (name in names(datasets)) {
       #Delete temporary files if specified
       if(includeTempFiles == "false"){
         filesAll <- list.files(outputFolder, full.names = TRUE)
-        filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+        filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
         filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
         do.call(unlink, filesToRemove)
       }
