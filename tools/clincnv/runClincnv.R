@@ -23,14 +23,12 @@ params <- yaml.load_file(clincnvParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
-
+#get folders and environment names
 condaFolder <-file.path(params$condaFolder)
-print(condaFolder)
 environmentName <- file.path(params$environmentName)
-ngsbitsFolder <- file.path(params$ngsbitsFolder)
-# get clincnv folder
-clincnvFolder <- file.path(params$clincnvFolder)
-currentFolder <- getwd()
+ngsbitsFolder <- file.path(params$ngsbitsFolder)# get ngsbits folder
+clincnvFolder <- file.path(params$clincnvFolder)# get clincnv folder
+currentFolder <- getwd() #get current folder
 
 # run clincnv on selected datasets
 for (name in names(datasets)) {
@@ -91,8 +89,7 @@ for (name in names(datasets)) {
                  "--bed", dataset$annotated_bed_file, "--scoreG", params$scoreG,
                  "--minimumNumOfElemsInCluster", params$minimumNumOfElemsInCluster,
                  "--numberOfThreads", params$threads, "--lengthG 0 --reanalyseCohort")
-    print(cmd)
-    system(cmd)
+    print(cmd);system(cmd)
 
 
     # 4: Summarize results into one file
