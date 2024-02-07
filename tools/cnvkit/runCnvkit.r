@@ -23,9 +23,6 @@ params <- yaml.load_file(cnvkitParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
-#get conda folder and the environment where cnvkit is insalled
-condaFolder <-file.path(params$condaFolder)
-environmentName <- file.path(params$environmentName)
 
 #get cnvkit folder
 cnvkitFolder <- file.path(params$cnvkitFolder)
@@ -49,23 +46,15 @@ for (name in names(datasets)) {
     } else {
       outputFolder <- file.path(getwd(), "output", paste0("cnvkit-", name))
     }
-    #unlink(outputFolder, recursive = TRUE);
-    #dir.create(outputFolder, showWarnings = FALSE)
+    unlink(outputFolder, recursive = TRUE);
+    dir.create(outputFolder, showWarnings = FALSE)
 
     # Get bam files
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
 
     # Access: calculate accessible coordinates of the chromosome sequences
-    # cmd <- paste(condaFolder,
-    #              "run -n", environmentName,
-    #              cnvkitFolder, "access",
-    #              fastaFile,
-    #              "-s", params$minGapSizeAccess,
-    #              "-o", file.path(outputFolder, "access.bed"))
-
     cmd <- paste(".",
                  cnvkitFolder, "\n",
-                 #"srun",
                  "cnvkit.py",  "access",
                  fastaFile,
                  "-s", params$minGapSizeAccess,
@@ -74,25 +63,8 @@ for (name in names(datasets)) {
     print(cmd);system(cmd)
 
     #Autobin: Quickly estimate read counts or depths in a BAM file to estimate reasonable on- and (if relevant) off-target bin sizes.
-    # cmd <- paste(condaFolder,
-    #              "run -n", environmentName,
-    #              cnvkitFolder, "autobin",
-    #              paste0(bamsDir, "/*.bam"),
-    #              "-m hybrid",
-    #              "-t", bedFile,
-    #              "-g", file.path(outputFolder, "access.bed"),
-    #              "-b", params$bpPerBinAutobin,
-    #              "--target-max-size", params$targetMaxSizeAutobin,
-    #              "--target-min-size", params$targetMinSizeAutobin,
-    #              "--antitarget-max-size", params$antitargetMaxSizeAutobin,
-    #              "--antitarget-min-size", params$antitargetMinSizeAutobin,
-    #              "--target-output-bed",  file.path(outputFolder, "ROIs-ICR96-panelcnDataset.target.bed"),
-    #              "--antitarget-output-bed",  file.path(outputFolder, "ROIs-ICR96-panelcnDataset.antitarget.bed")
-    # )
-
     cmd <- paste(".",
                  cnvkitFolder, "\n",
-                 #"srun",
                  "cnvkit.py", "autobin",
                  paste0(bamsDir, "/*.bam"),
                  "-m hybrid",
@@ -107,6 +79,7 @@ for (name in names(datasets)) {
                  "--antitarget-output-bed",  file.path(outputFolder, "ROIs-ICR96-panelcnDataset.antitarget.bed")
     )
     print(cmd);system(cmd)
+    #create a folder to store calls files
     dir.create(file.path(outputFolder, "calls"))
 
     for(i in seq_len(length(bamFiles))){
@@ -114,16 +87,8 @@ for (name in names(datasets)) {
       sampleName <- basename(tools::file_path_sans_ext(bamFiles))
 
       #Get the coverage for target and antitarget
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "coverage",
-      #              bamFiles[i],
-      #              "-q", params$minMapqCoverage,
-      #              file.path(outputFolder, "ROIs-ICR96-panelcnDataset.target.bed"),
-      #              "-o", file.path(outputFolder, paste0(sampleName[i], ".targetcoverage.cnn" )))
       cmd <- paste(".",
                    cnvkitFolder, "\n",
-                   #"srun",
                    "cnvkit.py",  "coverage",
                    bamFiles[i],
                    "-q", params$minMapqCoverage,
@@ -131,13 +96,6 @@ for (name in names(datasets)) {
                    "-o", file.path(outputFolder, paste0(sampleName[i], ".targetcoverage.cnn" )))
       print(cmd);system(cmd)
 
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "coverage",
-      #              bamFiles[i],
-      #              "-q", params$minMapqCoverage,
-      #              file.path(outputFolder, "ROIs-ICR96-panelcnDataset.antitarget.bed"),
-      #              "-o", file.path(outputFolder, paste0(sampleName[i], ".antitargetcoverage.cnn" )))
       cmd <- paste(".",
                    cnvkitFolder, "\n",
                    #"srun",
@@ -146,7 +104,7 @@ for (name in names(datasets)) {
                    "-q", params$minMapqCoverage,
                    file.path(outputFolder, "ROIs-ICR96-panelcnDataset.antitarget.bed"),
                    "-o", file.path(outputFolder, paste0(sampleName[i], ".antitargetcoverage.cnn" )))
-      #print(cmd); system(cmd)
+      print(cmd); system(cmd)
     }
 
     for(i in seq_len(length(bamFiles))){
@@ -154,16 +112,8 @@ for (name in names(datasets)) {
       #Get cnn Target and antitarget files
       cnnTarget <- paste0(file.path(outputFolder, paste0(sampleName[-i], ".targetcoverage.cnn" )), collapse = " ")
       cnnAntitarget <- paste0(file.path(outputFolder, paste0(sampleName[-i], ".antitargetcoverage.cnn" )), collapse=" ")
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "reference",
-      #              cnnTarget, cnnAntitarget,
-      #              "-f", fastaFile,
-      #              "--min-cluster-size", params$minClusterSizeReference,
-      #              "-o", file.path(outputFolder, paste0(sampleName[i], "reference.cnn" )))
       cmd <- paste(".",
                    cnvkitFolder, "\n",
-                   #"srun",
                    "cnvkit.py", "reference",
                    cnnTarget, cnnAntitarget,
                    "-f", fastaFile,
@@ -174,57 +124,30 @@ for (name in names(datasets)) {
 
 
       #Fix: uncorrected target and antitarget coverage tables (.cnn) and correct for biases in regional coverage and GC content, according to the given reference.
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "fix",
-      #              file.path(outputFolder, paste0(sampleName[i], ".targetcoverage.cnn" )),
-      #              file.path(outputFolder, paste0(sampleName[i], ".antitargetcoverage.cnn" )),
-      #              file.path(outputFolder, paste0(sampleName[i], "reference.cnn" )),
-      #              "-o",  file.path(outputFolder, paste0(sampleName[i], ".cnr")))
       cmd <- paste(".",
                    cnvkitFolder, "\n",
-                   #"srun",
                    "cnvkit.py", "fix",
                    file.path(outputFolder, paste0(sampleName[i], ".targetcoverage.cnn" )),
                    file.path(outputFolder, paste0(sampleName[i], ".antitargetcoverage.cnn" )),
                    file.path(outputFolder, paste0(sampleName[i], "reference.cnn" )),
                    "-o",  file.path(outputFolder, paste0(sampleName[i], ".cnr")))
-     # paste(cmd); system(cmd)
+     paste(cmd); system(cmd)
 
 
-      #Segment infer discrete copy number segments from the given coverage tamble:
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "segment",
-      #              file.path(outputFolder, paste0(sampleName[i], ".cnr")),
-      #              "-m", params$methodSegment,
-      #              #"-t", params$thresehold,
-      #              "--drop-outliers", params$DropOutliersSegment,
-      #              "-o", file.path(outputFolder, paste0(sampleName[i], ".cns")))
+      #Segment infer discrete copy number segments from the given coverage table:
       cmd <- paste(".",
                    cnvkitFolder, "\n",
-                   #"srun",
                    "cnvkit.py", "segment",
                    file.path(outputFolder, paste0(sampleName[i], ".cnr")),
                    "-m", params$methodSegment,
                    #"-t", params$thresehold,
                    "--drop-outliers", params$DropOutliersSegment,
                    "-o", file.path(outputFolder, paste0(sampleName[i], ".cns")))
-      #paste(cmd);system(cmd)
+      paste(cmd);system(cmd)
 
       #Segmetrics: Calculate summary statistics of the residual bin-level log2 ratio estimates from the segment means, similar to the existing metrics command, but for each segment individually.
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "segmetrics",
-      #              file.path(outputFolder, paste0(sampleName[i], ".cnr")),
-      #              "-s", file.path(outputFolder, paste0(sampleName[i], ".cns")),
-      #              "--ci",
-      #              "--alpha", params$alphaSegmetrics,
-      #              "-b", params$bootstrapSegmetrics,
-      #              "-o", file.path(outputFolder, paste0(sampleName[i],"segment.cns")))
       cmd <- paste(".",
                    cnvkitFolder, "\n",
-                   #"srun",
                    "cnvkit.py", "segmetrics",
                    file.path(outputFolder, paste0(sampleName[i], ".cnr")),
                    "-s", file.path(outputFolder, paste0(sampleName[i], ".cns")),
@@ -233,42 +156,22 @@ for (name in names(datasets)) {
                    "-b", params$bootstrapSegmetrics,
                    "-o", file.path(outputFolder, paste0(sampleName[i],"segment.cns")))
 
-      #paste(cmd);system(cmd)
+      paste(cmd);system(cmd)
 
       #call cnvs
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "call",
-      #              file.path(outputFolder, paste0(sampleName[i], "segment.cns")),
-      #              "--filter", "ci",
-      #              "-m", params$methodCall,
-      #              #"-t", params$thresholdsCall,
-      #              "-o", file.path(outputFolder, paste0("calls/", sampleName[i], ".call.cns")))
       cmd <- paste(".",
                    cnvkitFolder, "\n",
-                   #"srun",
                    "cnvkit.py", "call",
                    file.path(outputFolder, paste0(sampleName[i], "segment.cns")),
                    "--filter", params$filterCall,
                    "-m", params$methodCall,
                    paste0("-t=", params$thresholdsCall_del, params$thresholdsCall_loss, params$thresholdsCall_gain, params$thresholdsCall_amp),
                    "-o", file.path(outputFolder, paste0("calls/", sampleName[i], ".call.cns")))
-      #paste(cmd);system(cmd)
+      paste(cmd);system(cmd)
 
       #bintest
-
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "bintest",
-      #              file.path(outputFolder, paste0(sampleName[i], ".cnr")),
-      #              "-s", file.path(outputFolder, paste0("calls/", sampleName[i], ".call.cns")),
-      #              "-t",
-      #              "-a", params$alphaBintest,
-      #              "-o", file.path(outputFolder, paste0(sampleName[i], "bintest.cns"))
-      #              )
       cmd <- paste(".",
                    cnvkitFolder, "\n",
-                   #"srun",
                    "cnvkit.py", "bintest",
                    file.path(outputFolder, paste0(sampleName[i], ".cnr")),
                    "-s", file.path(outputFolder, paste0("calls/", sampleName[i], ".call.cns")),
@@ -276,24 +179,17 @@ for (name in names(datasets)) {
                    "-a", params$alphaBintest,
                    "-o", file.path(outputFolder, paste0(sampleName[i], "bintest.cns"))
       )
-      #print(cmd); system(cmd)
-      # cmd <- paste(condaFolder,
-      #              "run -n", environmentName,
-      #              cnvkitFolder, "call",
-      #              file.path(outputFolder, paste0(sampleName[i], "bintest.cns")),
-      #              "-m", params$methodCall,
-      #              #"-t", params$thresholdsCall,
-      #              "-o", file.path(outputFolder, paste0("calls/", sampleName[i], "bintest.call.cns")))
+      print(cmd); system(cmd)
+
       cmd <- paste(".",
                    cnvkitFolder, "\n",
-                   #"srun",
                    "cnvkit.py", "call",
                    file.path(outputFolder, paste0(sampleName[i], "bintest.cns")),
                    "-m", params$methodCall,
                    #"-t", params$thresholdsCall,
                    "-o", file.path(outputFolder, paste0("calls/", sampleName[i], "bintest.call.cns")))
 
-      #print(cmd); system(cmd)
+      print(cmd); system(cmd)
 
 
     }
@@ -364,7 +260,7 @@ saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "name
 #Delete temporary files if specified
 if(includeTempFiles == "false"){
   filesAll <- list.files(outputFolder, full.names = TRUE)
-  filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+  filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
   filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
   do.call(unlink, filesToRemove)
 }
