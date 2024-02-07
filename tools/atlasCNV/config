@@ -1,5 +1,0 @@
-GATKDIR=/home/croca/Benchmark/CNVbenchmarkeR_all/tools/atlasCNV/coverage_files/[SAMPLE_FCLBC].DATA.sample_interval_summary
-ATLASCNV=/home/croca/Benchmark/CNVbenchmarkeR_all/tools/atlasCNV
-RPATH=/usr/local/opt/R-4.2.1/bin/R
-RSCRIPT=/usr/local/opt/R-4.2.1/bin/Rscript
-
