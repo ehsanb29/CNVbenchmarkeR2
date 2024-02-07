@@ -71,8 +71,6 @@ deconFolder <- file.path(deconParams$deconFolder)
 
 # Set decon as working directory. Necessary to make decon packrat work
 currentFolder <- getwd()
-print(deconFolder)
-
 
 # go over datasets and run decon for those which are active
 for (name in names(datasets)) {
