@@ -27,8 +27,8 @@ params <- yaml.load_file(viscapParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
+#Get folder names
 currentFolder <- getwd()
-print(currentFolder)
 viscapFolder <- file.path(params$viscapFolder)
 gatkFolder <- file.path(params$gatkFolder)
 picardJar <- file.path(params$picarJar)
@@ -45,8 +45,6 @@ for (name in names(datasets)) {
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
 
-
-
     # Create output folder
     if (!is.null(params$outputFolder)) {
         if(stringr::str_detect(params$outputFolder, "^./")) params$outputFolder <- stringr::str_sub(params$outputFolder, 3, stringr::str_length(params$outputFolder))
@@ -61,7 +59,7 @@ for (name in names(datasets)) {
 
     #create input files required for running GATK
     # Dictionary ----
-    #create dictionary file (.dict) from reference genome (.)
+    #create dictionary file (.dict) from reference genome (.) only if it not exists
     fastaDict <- paste0(tools::file_path_sans_ext(fastaFile), ".dict")
 
     if(!file.exists(fastaDict)){
@@ -69,22 +67,22 @@ for (name in names(datasets)) {
                     " CreateSequenceDictionary",
                     " -R ", fastaFile,
                     " -O ", fastaDict)
-
-
       paste(cmd);system(cmd);
     }
 
 
-    #Depth of coverage
+    #Depth of coverage (DOC)
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     depthCoverageFolder <- ifelse(evaluateParameters=="false",
                                   file.path(outputFolder, "DepthOfCoverage"),
                                   paste0(currentFolder, "/evaluate_parameters/viscap/", name, "/DepthOfCoverage")
 
     )
+    #if DOC exists this step is skipped
     if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder))<7){
     dir.create(depthCoverageFolder, showWarnings = FALSE)
     bam <- basename(bamFiles) %>% tools::file_path_sans_ext()
+    #Create DOC files for all samples
     for (i in seq_len(length(bamFiles))){
       cmd <- paste(file.path(gatkFolder, "gatk"),  "DepthOfCoverage",
                    "-R",  fastaFile,
@@ -100,7 +98,6 @@ for (name in names(datasets)) {
 
     #Create a cfg file with all the parameters to use
     viscapConfig<- file.path(outputFolder, "VisCap.cfg")
-    print(viscapConfig)
     cfg <- data.frame(V1=c("#VisCap configuration file for Linux users"))
     cfg <- cfg %>%
       dplyr::add_row(V1=paste0('interval_list_dir           <- "', dirname(bedFile), '"' )) %>%
@@ -124,7 +121,7 @@ for (name in names(datasets)) {
       outputFolder1 <- outputFolder
     }
 
-
+#Run Viscap
     cmd <- paste("Rscript", file.path(viscapFolder, "VisCap.R"),
                  depthCoverageFolder,
                  outputFolder1,
@@ -132,7 +129,7 @@ for (name in names(datasets)) {
 
     print(cmd); system(cmd)
 
-    setwd("../..") #return to the folder
+    setwd("../..") #return to the original folder
 
     #Create a dataframe to store viscap results
     cnvData <- data.frame()
@@ -156,6 +153,7 @@ for (name in names(datasets)) {
     }
     cnvData <- cnvData %>% select("chr", "start", "end", "copy_number", "Median_log2ratio", "Interval_count", "Sample" )
     names(cnvData) <- c("chr", "start", "end", "copy_number", "quality", "targets", "Sample")
+
     #Convert bed file and cnvData results to GRanges class object
     bedGR <- regioneR::toGRanges(bedFile)
     resultsGR <- regioneR::toGRanges(cnvData)
@@ -173,7 +171,6 @@ for (name in names(datasets)) {
       res <- as.data.frame(IRanges::subsetByOverlaps(bedGR, cnvGR)) %>%
         dplyr::mutate(copy_number = cnvGR$copy_number,
                       quality = cnvGR$quality,
-                      #width = cnvGR$width,
                       targets = cnvGR$targets,
                       Sample = resultsGR$Sample[i]) %>%
         dplyr::group_by(name, Sample, seqnames) %>%
