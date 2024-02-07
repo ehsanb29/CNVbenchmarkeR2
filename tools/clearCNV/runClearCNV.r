@@ -24,10 +24,6 @@ params <- yaml.load_file(clearCNVParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
-#get conda folder and the environment where clearCNV is insalled
-#condaFolder <-file.path(params$condaFolder)
-#environmentName <- file.path(params$environmentName)
-
 #get clearCNV folder
 clearCNVFolder <- file.path(params$clearCNVFolder)
 
@@ -82,10 +78,6 @@ for (name in names(datasets)) {
                  "--del_cutoff", params$del_cutoff,
                  "--dup_cutoff", params$dup_cutoff,
                  "--trans_prob", params$trans_prob
-                 #"--cluster_configfile", params$cluster_configfile,
-                 #"--drmaa_mem", params$drmaa_mem,
-                 #"--drmaa_time", params$drmaa_time,
-                 #"--drmaa_jobs", params$drmaa_jobs
     )
     paste(cmd);system(cmd);
 
@@ -109,7 +101,7 @@ for (name in names(datasets)) {
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
-      filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
+      filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
       do.call(unlink, filesToRemove)
     }
