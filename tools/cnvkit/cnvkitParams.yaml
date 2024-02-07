@@ -1,7 +1,3 @@
-#cnvkitFolder: "/home/emunte/miniconda3/envs/cnvkitv0.9.10/bin/cnvkit.py"
-#condaFolder: "/home/emunte/miniconda3/condabin/conda"
-#environmentName: cnvkitv0.9.10
-
 cnvkitFolder: ~/cnvkit/bin/activate
 
 # default values
