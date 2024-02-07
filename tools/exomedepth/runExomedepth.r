@@ -34,7 +34,7 @@ processExomedepthBody <- function(testCountsDF, controlCountsDF, countsDef, para
     references = select.reference.set(test.counts = testCounts,
                                       reference.count = controlCounts,
                                       bin.length = (countsDF$end - countsDF$start) / 1000,
-                                      n.bins.reduced = 10000,
+                                      n.bins.reduced = params$n.bins.reduced,
                                       phi.bins = params$phi.bins)
     controls = apply(X = as.matrix(controlCounts[, references$reference.choice]), MAR=1, FUN=sum)
 
