@@ -34,59 +34,29 @@ print(paste("Datasets for this execution:", list(datasets)))
 
 # Get AtlasCNV folder ----
 atlascnvFolder <- file.path(params$atlascnvFolder)
+
 #locate the reference and contig files
 fastaFile <- file.path(datasets[[1]]$fasta_file)
-print(fastaFile)
 contigFile <- file.path(params$contigFile)
 gatkFolder <- file.path(params$gatkFolder)
 picardJar <- file.path(params$picardJar)
-print(picardJar)
 currentFolder <- getwd()
-
 
 #create input files required for running GATK
 # Dictionary ----
-#create dictionary file (.dict) from reference genome (.)
-# if(!file.exists(paste0(atlascnvFolder, "/reference.dict"))){
-#   cmd_dictionary<- paste0(" java -jar $PICARD",
-#                           " CreateSequenceDictionary",
-#                           " -R ", fastaFile,
-#                           " -O ", atlascnvFolder, "/reference.dict")
-#
-#
-#   paste(cmd_dictionary);system(cmd_dictionary);
-# }
-#create the variable for the reference dictionary
-#dictionary<-paste0(atlascnvFolder,"/reference.dict")
-
-
 fastaDict <- paste0(tools::file_path_sans_ext(fastaFile), ".dict")
-print(file.exists(fastaDict))
 
 if(!file.exists(fastaDict)){
   cmd <- paste0(" java -jar ", picardJar,
                 " CreateSequenceDictionary",
                 " -R ", fastaFile,
                 " -O ", fastaDict)
-
-
   paste(cmd);system(cmd);
 }
 
 
-#create the folder for the coverage files
-
-# coverageFiles <- file.path(paste0(atlascnvFolder, "/coverage_files"))
-# if (!file.exists(coverageFiles)){
-#   dir.create(coverageFiles)
-# } else {
-#   unlink(coverageFiles, recursive = TRUE)
-#   dir.create(coverageFiles, recursive=TRUE)
-# }
-
-
 # Dataset iteration ----
-# go over datasets and run cnvkit for those which are active
+# go over datasets and run AtlasCNV for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
   if (dataset$include){
@@ -100,6 +70,7 @@ for (name in names(datasets)) {
     } else {
       outputFolder <- file.path(getwd(), "output", paste0("atlasCNV-", name))
     }
+
     unlink(outputFolder, recursive = TRUE);
     dir.create(outputFolder, showWarnings = FALSE)
 
@@ -108,38 +79,13 @@ for (name in names(datasets)) {
     bamsDir <- file.path(dataset$bams_dir)
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     bedFile <- file.path(dataset$bed_file)
-    #annotatedBedFile<-file.path(dataset$annotated_bed_file)
 
     # Input files for Atlas-CNV ----
-    ## Interval list----
-    #create intervals file (.intervals_list) from .bed file
-    #if(!file.exists(paste0(atlascnvFolder, "/list.interval_list"))){
-    # cmd_interval <- paste0( " java -jar  $PICARD",
-    #                         " BedToIntervalList",
-    #                         " -I ", bedFile,
-    #                         " -O ", atlascnvFolder,"/list.interval_list",
-    #                         " -SD ", dictionary)
-
-    #paste(cmd_interval);system(cmd_interval); }
-
-
-    #if(!file.exists(paste0(atlascnvFolder, "/list.interval_list"))){
-    #dir.create(file.path(outputFolder,"list.interval_list"), showWarnings = FALSE)
-    # print("file")
-    # cmd_interval <- paste0( " java -jar ", picardJar,
-    #                         " BedToIntervalList",
-    #                         " -I ", bedFile,
-    #                         " -O ", outputFolder,"/list.interval_list",
-    #                         " -SD ", fastaDict)
-    # paste(cmd_interval);system(cmd_interval);
-
 
     ## Panel file ----
     #create panel file to input in Atlas
     ##
     tempBed<-read.csv(bedFile, sep="\t", header = FALSE)
-
-    #tempBed<-read.csv(bedFile, sep="\t", header = FALSE)
 
     panel<-tempBed %>%
       arrange(V1) %>%
@@ -150,7 +96,6 @@ for (name in names(datasets)) {
       select(-starts_with("V"))
     panel$Gene_Exon<-ave(panel$Gene_Exon, panel$Gene_Exon, FUN = function(i) paste0(i, '_', seq_along(i)))
     #export panel file
-    #write.table(panel, file=paste0(atlascnvFolder,'/panel',name,'.txt'),sep="\t", col.names=T, row.names=FALSE,quote=FALSE)
     write.table(panel, file=paste0(outputFolder,'/panel',name,'.txt'),sep="\t", col.names=T, row.names=FALSE,quote=FALSE)
 
     ## Sample file ----
@@ -160,21 +105,18 @@ for (name in names(datasets)) {
       mutate(sex="F") %>%
       mutate(mp=name)
     #export sample file
-    #write.table(sample, file=paste0(atlascnvFolder,'/',name,'.sample'),sep="\t", col.names=F, row.names=FALSE,quote=FALSE)
     write.table(sample, file=paste0(outputFolder,'/',name,'.sample'),sep="\t", col.names=F, row.names=FALSE,quote=FALSE)
+    #Remove intermediate files
     rm(tempSample, tempBed)
 
-    #create folder for coverage files
-    #coverageFiles <- file.path(paste0(outputFolder, "/coverage_files"))
-    #create Depth of coverageFolder
-    print(evaluateParameters)
+    #create Depth of coverage folder (DOC)
     depthCoverageFolder <- ifelse(evaluateParameters=="false",
                                   file.path(outputFolder, "DepthOfCoverage"),
                                   paste0(currentFolder, "/evaluate_parameters/atlasCNV/", name, "/DepthOfCoverage"))
 
-    print(depthCoverageFolder)
+  #Check if DOC folder exists to skip this step
     if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder))<7){
-
+    #if it doesn't exist it calculates DOC
     dir.create(depthCoverageFolder, showWarnings = FALSE)
 
     #get depth of coverage for each BAM file, using GATK
@@ -186,39 +128,22 @@ for (name in names(datasets)) {
                      "-I", bamFiles[i],
                      "-O",  file.path(depthCoverageFolder,paste0(bam[i], ".DATA")),
                      "--output-format", "TABLE",
-                     #" --disable-sequence-dictionary-validation true ",
                      "-L", bedFile)
-        #"-L", paste0(outputFolder,"/list.interval_list"))
         print(cmd);system(cmd)
       }
     }
-      #   print(basename(bam))
-      #   sample_name<-sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(bam))
-      #   cmd_read_counts <- paste0( " gatk DepthOfCoverage ",
-      #                              " -R ", fastaFile,
-      #                              " --disable-sequence-dictionary-validation true ",
-      #                              " -I ", bamsDir,"/",sample_name, ".bam",
-      #                              " -L ", bedFile,
-      #                              " -O /", coverageFiles)
-      #
-      #   paste(cmd_read_counts);system(cmd_read_counts);
-    }
+  }
 
     print("run atlasCNV")
 
     setwd(outputFolder)
 
-    #read config file
-    print(atlascnvFolder)
-    #config <- read.table(paste0(atlascnvFolder,"/config"))
+    #create configuration file
     ##atlasCNV configuration file for Linux users
     cfg <- data.frame(V1=paste0("GATKDIR=", depthCoverageFolder, "/[SAMPLE_FCLBC].DATA.sample_interval_summary"))%>%
       dplyr::add_row(V1=paste0("ATLASCNV=", params$atlascnvFolder)) %>%
       dplyr::add_row(V1=paste0("RPATH=", params$rpath)) %>%
       dplyr::add_row(V1=paste0("RSCRIPT=", params$Rscript))
-
-    #Put the Depth of Coverage folder in config files
-    #config[1,1] <- paste0("GATKDIR=", depthCoverageFolder, "/[SAMPLE_FCLBC].DATA.sample_interval_summary")
 
     write.table(cfg, paste0(outputFolder,"/config"), col.names = FALSE, row.names = FALSE, quote = FALSE)
 
@@ -235,22 +160,11 @@ for (name in names(datasets)) {
     print(cmd_run_atlascnv);system(cmd_run_atlascnv);
 
     #merge cnv output files and modify columns
-    #resDF <- list.files(paste0(outputFolder,"/",name), pattern = ".cnv$", recursive = TRUE, full.names = TRUE)  %>%
-    # resDF <- list.files(paste0(outputFolder,"/",name), pattern = ".cnv$", recursive = TRUE, full.names = TRUE)  %>%
-    #   purrr::set_names() %>%
-    #   purrr::map_dfr(~read.delim(.x)%>%
-    #                    mutate(across(everything(), as.character)), .id = "sample", sep='\t' ) %>%
-    #   mutate(sample = stringr::str_replace_all(basename(sample),".cnv","")) %>%
-    #   dplyr::rename("gene"= "Gene_Exon") %>%
-    #   tidyr::separate(Exon_Target, c("chr", "start","end"))%>%
-    #   mutate(CNV.type = ifelse(cnv == "del",
-    #                            "deletion",
-    #                            "duplication"))
+
     resDF <- list.files(name, pattern = "\\.cnv", recursive = TRUE, full.names = TRUE)  %>%
       purrr::set_names(basename) %>%
       purrr::map(read.delim) %>% rlist::list.rbind() %>% as.data.frame() %>%
       tibble::rownames_to_column(var="sample") %>% dplyr::mutate(sample= stringr::str_replace_all(sample, ".cnv.FAILED_sampleQC_and_sampleANOVA.[0-9]+|.cnv.FAILED_sampleANOVA.[0-9]+|.cnv..FAILED_sampleQC.[0-9]+|.cnv.FAILED_sampleQC.[0-9]|.cnv.FAILED_sampleANOVA|.cnv.[0-9]+|.cnv","")) %>%
-      #mutate(gene=Gene_Exon) %>%
       dplyr::rename( "gene" = "Gene_Exon") %>%
       tidyr::separate(Exon_Target, c("chr", "start","end"))%>%
       dplyr::mutate(CNV.type = ifelse(cnv == "del",
@@ -279,20 +193,9 @@ for (name in names(datasets)) {
 
 
   }
-
+#return to the original folder
   setwd("../..")
 }
-
-# Create output folder ----
-# if (!is.null(params$outputFolder)) {
-#   outputFolder <- params$outputFolder
-# } else {
-#   outputFolder <- file.path(getwd(), "output", paste0("atlasCNV-", name))
-# }
-# unlink(outputFolder, recursive = TRUE);
-# dir.create(outputFolder, showWarnings = FALSE)
-#
-
 
 print(paste("Finishing at", endTime <- Sys.time()))
 cat("\nElapsed time:")
