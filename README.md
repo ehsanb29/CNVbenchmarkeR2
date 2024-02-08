@@ -9,18 +9,18 @@ Previous version, CNVbenchmarkeR, is available [here](https://github.com/Transla
 
 Tools should be properly installed. Links for tools installation:
 
-- [Panelcn.mops]https://github.com/bioinf-jku/panelcn.mops
-- [CoNVaDING]https://molgenis.gitbooks.io/convading/ 
-- [DECoN]https://github.com/RahmanTeam/DECoN
-- [CODEX2]https://github.com/yuchaojiang/CODEX2
-- [ExomeDepth]https://cran.r-project.org/web/packages/ExomeDepth/index.html
-- [ClinCNV]https://github.com/imgag/ClinCNV
-- [clearCNV]https://github.com/bihealth/clear-cnv
-- [Atlas-CNV]https://github.com/theodorc/Atlas-CNV
-- [Cobalt]https://github.com/ARUP-NGS/cobalt
-- [CNVkit]https://github.com/etal/cnvkit
-- [VisCap]https://github.com/pughlab/VisCap
-- [GATK]https://hub.docker.com/r/broadinstitute/gatk (At the moment, it only works using [singularity]https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
+- [Panelcn.mops](https://github.com/bioinf-jku/panelcn.mops)
+- [CoNVaDING](https://molgenis.gitbooks.io/convading)
+- [DECoN](https://github.com/RahmanTeam/DECoN)
+- [CODEX2](https://github.com/yuchaojiang/CODEX2)
+- [ExomeDepth](https://cran.r-project.org/web/packages/ExomeDepth/index.html)
+- [ClinCNV](https://github.com/imgag/ClinCNV)
+- [clearCNV](https://github.com/bihealth/clear-cnv)
+- [Atlas-CNV](https://github.com/theodorc/Atlas-CNV)
+- [Cobalt](https://github.com/ARUP-NGS/cobalt)
+- [CNVkit](https://github.com/etal/cnvkit)
+- [VisCap](https://github.com/pughlab/VisCap)
+- [GATK](https://hub.docker.com/r/broadinstitute/gatk) (At the moment, it only works using [singularity]https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
 
 Also, R/Bioconductor should be installed with at least this packages: GenomicRanges, biomaRt, regioneR.
 
