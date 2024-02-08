@@ -93,7 +93,7 @@ cd ..
 Rscript evaluate_parameters/runEvaluate.R 
 
 ```
-For space optimization, it's recommended to set the -f parameter to false, which deletes all intermediate files.
+For space optimization, it is recommended to set the -f parameter to false, which deletes all intermediate files.
 
 
 
