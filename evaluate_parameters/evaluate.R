@@ -1,4 +1,4 @@
-#USAGE: Rscript optimizer.r [-t tools.yaml]  [-d dataset.yaml] (call from evaluate folder)
+#USAGE: Rscript evaluate.R [-t tools_yaml]  [-d dataset_yaml] (call from evaluate folder)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 library(methods)
