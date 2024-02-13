@@ -1,6 +1,6 @@
 # CNVbenchmarkeR2 #
 
-CNVbenchmarkeR2 is a framework to benchmark germline copy number variant (CNV) calling tools on different NGS datasets. Current version supports DECoN, CoNVaDING, panelcn.MOPS, ExomeDepth, CODEX2, ClinCNV, clearCNV, GATK-gCNV, Atlas-CNV, Cobalt, CNVkit and VisCap tools
+CNVbenchmarkeR2 is a framework to benchmark germline copy number variant (CNV) calling tools on multiple NGS datasets. Current version supports DECoN, CoNVaDING, panelcn.MOPS, ExomeDepth, CODEX2, ClinCNV, clearCNV, GATK-gCNV, Atlas-CNV, Cobalt, CNVkit and VisCap tools.
 
 Previous version, CNVbenchmarkeR, is available [here](https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR).
 
@@ -30,23 +30,14 @@ Also, R/Bioconductor should be installed with at least this packages: GenomicRan
 git clone https://github.com/jpuntomarcos/CNVbenchmarkeR2 
 ```
 
-2. **Configure tools.yaml** to set which tools will be benchmarked. For DECoN, Convading, ClinCNV, clearCNV, GATK-gCNV, Atlas-CNV, Cobalt, CNVkit and Viscap modify the corresponding params.yaml file stored in:
-tools/[name_of_the_tool]/[name_of_the_tool]Params.yaml 
-to include the tool foler installation. 
+2. **Configure tools.yaml** to set which tools will be benchmarked.
+  
+3. **Set tool parameter values** located at tools/[name_of_the_tool]/[name_of_the_tool]Params.yaml. Please, note that **tool paths must be set** for tools that are not R packages (DECoN, Convading, ClinCNV, clearCNV, GATK-gCNV, Atlas-CNV, Cobalt, CNVkit and Viscap).
 
-Additional specification to consider: 
-
-- For ClinCNV, set ngsbits folder
-- For Atlas-CNV, set the contigFile folder, the gatkFolder and the Rscript and rpath folder. 
-- For VisCap, set the gatkFolder and picardJar folder
+4. **Configure datasets.yaml** to define on which datasets the tools will be executed. Within this file, it is important to provide files with the exact expected format (**special attention** to `validated_results_file` and `bed_file` that are **tab-delimited** files). To do so, please **check the [examples](https://github.com/jpuntomarcos/CNVbenchmarkeR2/tree/master/examples) folder**.
 
 
-
-
-3. **Configure datasets.yaml** to define against which datasets the tools will be executed. Within this file, it is important to provide files with the exact expected format (**special attention** to `validated_results_file` and `bed_file` that are **tab-delimited** files). To do so, please **check the [examples](https://github.com/jpuntomarcos/CNVbenchmarkeR2/tree/master/examples) folder**.
-
-
-4. Launch CNVbenchmarkeR2
+5. Launch CNVbenchmarkeR2
 ```
 cd CNVbenchmarkerR2
 Rscript runBenchmark.R [-t tools_yaml] [-d datasets_yaml] [-f include_temp_files]
