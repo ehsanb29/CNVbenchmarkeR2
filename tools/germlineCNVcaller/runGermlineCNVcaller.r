@@ -44,6 +44,7 @@ print(currentFolder)
 
 
 
+
 # Dataset iteration ----
 
 # go over datasets and run cnvkit for those which are active
@@ -53,21 +54,6 @@ for (name in names(datasets)) {
     print(paste("Starting GermlineCNVcaller for", name, "dataset", sep=" "))
 
     #create input files required for running GATK
-    # Dictionary ----
-    #create dictionary file (.dict) from reference genome (.)
-    fastaFile <- file.path(dataset$fasta_file)
-    fastaDict <- paste0(tools::file_path_sans_ext(fastaFile), ".dict")
-    print(fastaFile)
-    print(fastaDict)
-    if(!file.exists(fastaDict)){
-      cmd <- paste0(" java -jar ", picardFolder,
-                    " CreateSequenceDictionary",
-                    " -R ", fastaFile,
-                    " -O ", fastaDict)
-
-
-      print(cmd);system(cmd);
-    }
 
 
     print("check if outputfolder exists:")
@@ -92,7 +78,7 @@ for (name in names(datasets)) {
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
     contigFile <- file.path(params$contigFile)
-
+    fastaDict <- file.path(dataset$fasta_dict)
 
 
     # Interval list----
