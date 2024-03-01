@@ -20,7 +20,7 @@ Tools should be properly installed. Links for tools installation:
 - [Cobalt](https://github.com/ARUP-NGS/cobalt)
 - [CNVkit](https://github.com/etal/cnvkit)
 - [VisCap](https://github.com/pughlab/VisCap)
-- [GATK](https://hub.docker.com/r/broadinstitute/gatk) (At the moment, it only works using [singularity](https://docs.sylabs.io/guides/3.0/user-guide/installation.html)).
+- [GATK-gCNV (GermlineCNVCaller)](https://hub.docker.com/r/broadinstitute/gatk) (At the moment, it only works using [singularity](https://docs.sylabs.io/guides/3.0/user-guide/installation.html)).
 
 Also, R/Bioconductor should be installed with at least this packages: GenomicRanges, biomaRt, regioneR.
 
