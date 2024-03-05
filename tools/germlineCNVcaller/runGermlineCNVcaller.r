@@ -37,12 +37,9 @@ print(paste("Datasets for this execution:", list(datasets)))
 picardFolder <- params$picardFolder
 condaFolder <- params$condaFolder
 singularityFolder <- params$singularityFolder
+contigFile <- file.path(params$contigFile)
 currentFolder <- getwd()
 #currentFolder <- "/data/croca_data/CNVbenchmarkeR2"
-print(currentFolder)
-#environmentName <- params$environmentName
-
-
 
 
 # Dataset iteration ----
@@ -77,7 +74,6 @@ for (name in names(datasets)) {
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
-    contigFile <- file.path(params$contigFile)
     fastaDict <- file.path(dataset$fasta_dict)
 
 
