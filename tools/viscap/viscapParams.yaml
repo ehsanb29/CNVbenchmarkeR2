@@ -2,7 +2,7 @@ viscapFolder: /home/croca/VisCap
 #viscapFolder: /home/emunte/tools/VisCap
 #gatkFolder: /home/emunte/tools/gatk-4.3.0.0
 gatkFolder: /usr/local/opt/gatk-4.3.0.0
-picardJar: /usr/local/opt/picard-2.27.4/jar/picard.jar
+
 
 # default
 cov_file_pattern: ".sample_interval_summary$"  # this is the extension of the coverage file from DepthOfCoverage
