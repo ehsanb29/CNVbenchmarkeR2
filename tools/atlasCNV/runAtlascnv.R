@@ -35,24 +35,10 @@ print(paste("Datasets for this execution:", list(datasets)))
 # Get AtlasCNV folder ----
 atlascnvFolder <- file.path(params$atlascnvFolder)
 
-#locate the reference and contig files
-fastaFile <- file.path(datasets[[1]]$fasta_file)
-contigFile <- file.path(params$contigFile)
+#locate the reference 
 gatkFolder <- file.path(params$gatkFolder)
-picardJar <- file.path(params$picardJar)
 currentFolder <- getwd()
 
-#create input files required for running GATK
-# Dictionary ----
-fastaDict <- paste0(tools::file_path_sans_ext(fastaFile), ".dict")
-
-if(!file.exists(fastaDict)){
-  cmd <- paste0(" java -jar ", picardJar,
-                " CreateSequenceDictionary",
-                " -R ", fastaFile,
-                " -O ", fastaDict)
-  paste(cmd);system(cmd);
-}
 
 
 # Dataset iteration ----
@@ -79,7 +65,8 @@ for (name in names(datasets)) {
     bamsDir <- file.path(dataset$bams_dir)
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     bedFile <- file.path(dataset$bed_file)
-
+    fastaFile <- file.path(dataset$fasta_file)
+    
     # Input files for Atlas-CNV ----
 
     ## Panel file ----
