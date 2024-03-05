@@ -1,9 +1,9 @@
 #germlinecnvcallerFolder: /home/croca/Benchmark/CNVbenchmarkeR_all/tools/germlineCNVcaller_eli
 gatkFolder: /usr/local/opt/gatk-4.3.0.0/
-contigFile: /home/croca/Benchmark/CNVbenchmarkeR2/tools/germlineCNVcaller/contig-ploidy-prior.tsv
+contigFile: /home/emunte/CNVbenchmarkeR2/tools/germlineCNVcaller/contig-ploidy-prior.tsv
 picardFolder: /usr/local/opt/picard-2.27.4/jar/picard.jar
 condaFolder: /usr/local/opt/anaconda-2022.05/condabin/conda
-singularityFolder: /home/croca/apptainer-sifs/gatk_4.2.6.1.sif
+singularityFolder: /home/emunte/apptainer-sifs/gatk_4.2.6.1.sif
 #environmentName: py3.6
 
 #germlineCNVcaller parameters
