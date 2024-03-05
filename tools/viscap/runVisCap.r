@@ -31,7 +31,7 @@ print(paste("Params for this execution:", list(params)))
 currentFolder <- getwd()
 viscapFolder <- file.path(params$viscapFolder)
 gatkFolder <- file.path(params$gatkFolder)
-picardJar <- file.path(params$picarJar)
+
 
 
 # go over datasets and run viscap for those which are active
@@ -44,6 +44,7 @@ for (name in names(datasets)) {
     bamsDir <- file.path(dataset$bams_dir)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
+   
 
     # Create output folder
     if (!is.null(params$outputFolder)) {
@@ -58,17 +59,7 @@ for (name in names(datasets)) {
 
 
     #create input files required for running GATK
-    # Dictionary ----
-    #create dictionary file (.dict) from reference genome (.) only if it not exists
-    fastaDict <- paste0(tools::file_path_sans_ext(fastaFile), ".dict")
-
-    if(!file.exists(fastaDict)){
-      cmd <- paste0(" java -jar ", picardJar,
-                    " CreateSequenceDictionary",
-                    " -R ", fastaFile,
-                    " -O ", fastaDict)
-      paste(cmd);system(cmd);
-    }
+ 
 
 
     #Depth of coverage (DOC)
