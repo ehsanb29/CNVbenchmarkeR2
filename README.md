@@ -73,15 +73,15 @@ An SGE cluster system has to be available.
 ### Run evaluate parameters
 1. Configure all the steps needed to run the benckmark (expained in section how to use)
 
-2. Run the evaluate script to create the necessary files for 'runEvaluate.R' . This step must be executed within the evaluate_parameters folder.
-```
-cd evaluate_parameters
-Rscript evaluate.R [-t tools_yaml] [-d datasets_yaml]
+2. Run the setUpFolders script to create the subfolders that will contain the YAML files defining the settings values to be used for each execution.This step should be performed in the CNVbenchmarkeR2 folder.
+
+``` 
+Rscript evaluate_parameters/setUpFolders.R [-t tools_yaml] [-d datasets_yaml]
 ```
 3. Execute the runEvaluate script. This step should be performed in the CNVbenchmarkeR2 folder.
 ```
 cd ..
-Rscript evaluate_parameters/runEvaluate.R 
+Rscript evaluate_parameters/runEvaluate.R [-t tools_file] [-d datasets_file] [-f include_temp_files]
 
 ```
 For space optimization, it is recommended to set the -f parameter to false, which deletes all intermediate files.
