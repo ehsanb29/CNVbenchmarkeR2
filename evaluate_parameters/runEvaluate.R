@@ -156,11 +156,6 @@ for (name in names(datasets)) {
 
       #print(j)
       num.tool <- which(stringr::str_detect(tools.run, algName))
-      # query<- paste(tools.run[num.tool],
-      #       filesParams[j],
-      #       file.path(paste("",algName, name, sep="/"), "datasets.yaml"),
-      #       args$include_temp_files,
-      #       " > ", file.path(paste0(filesParams[j] %>% dirname() %>% dirname(),"/logs"),paste0(algName,".log 2>&1")))
       query <- paste(tools.run[num.tool],
                    filesParams[j],
                      file.path(paste(getwd(), "evaluate_parameters",algName, name, sep="/"), "datasets.yaml"),
