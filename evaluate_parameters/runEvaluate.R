@@ -23,26 +23,29 @@ tools <- yaml.load_file(args$tools)
 datasets <- yaml.load_file(args$datasets)
 tools.run <- list.files(paste0(getwd(),"/tools"), pattern="run", recursive=T, full.names = T)
 
-#for each dataset
+#loop through each dataset
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
-  if (dataset$include){
-    for (i in seq_len(length(tools))){
+  if (dataset$include){   # Check if the dataset is set to be included
+    for (i in seq_len(length(tools))){  # Loop through each tool set as TRUE
       if(isTRUE(tools[[i]])){
         algName <- names(tools[i])
         params <- yaml.load_file(paste0("tools/", algName, "/", algName, "Params.yaml"))
 
-        #Create Depth of Coverage files for Viscap and AtlasCNV
+        #Common part: # Common part: Certain steps for Viscap, AtlasCNV, and Germline are computed once for all parameter executions to save time and space, as the output of these steps remains constant regardless of parameter changes.
+        ##Common part for Viscap and AtlasCNV:  Create Depth of Coverage files
         if(algName == "viscap" | algName == "atlasCNV"){
           depthCoverageFolder <- paste0("./evaluate_parameters/", algName, "/", name, "/DepthOfCoverage")
 
           if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder))<7){
+            #get files and folders
             bamsDir <- file.path(dataset$bams_dir)
             bedFile <- file.path(dataset$bed_file)
             fastaFile <- file.path(dataset$fasta_file)
             gatkFolder<- params$gatkFolder
-
             bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
+
+            #create depthCoverageFolder
             dir.create(depthCoverageFolder, showWarnings = FALSE)
             bam <- basename(bamFiles) %>% tools::file_path_sans_ext()
             for (i in seq_len(length(bamFiles))){
@@ -60,8 +63,9 @@ for (name in names(datasets)) {
           }
         }
 
-        #Common part for GermlineCNV
+        ##Common part for GermlineCNV: Interval_list, collectReadCounts and DetermineGermlineContigPloidy
         if(algName == "germlineCNVcaller"){
+          #Create path to folders
           preCal <- paste0("./evaluate_parameters/", algName, "/", name, "/preCalculated")
           readCountsFolder <- paste0(preCal, "/ReadCounts")
           intervalListFolder <- paste0(preCal, "/IntervalList")
@@ -72,14 +76,11 @@ for (name in names(datasets)) {
           bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
 
           if(!dir.exists(readCountsFolder)| dir.exists(readCountsFolder) &&  length(list.files(readCountsFolder))!=length(bamFiles)){
-
             #create directories
             dir.create(preCal, showWarnings = FALSE)
             dir.create(readCountsFolder, showWarnings = FALSE)
             dir.create(intervalListFolder, showWarnings = FALSE)
             dir.create(contigPloidy, showWarnings = FALSE)
-
-
 
             #get singularity folder
             singularityFolder <- params$singularityFolder
@@ -87,20 +88,12 @@ for (name in names(datasets)) {
             #get bed file
             bedFile <- file.path(dataset$bed_file)
 
-            #Create fasta dict
+            #Get fasta and fasta dict
             fastaFile <- file.path(dataset$fasta_file)
-            fastaDict <- paste0(tools::file_path_sans_ext(fastaFile), ".dict")
+            fastaDict <- file.path(dataset$fasta_dict)
+
+            #picard path
             picardFolder <- params$picardFolder
-
-            if(!file.exists(fastaDict)){
-              cmd <- paste0(" java -jar ", picardFolder,
-                            " CreateSequenceDictionary",
-                            " -R ", fastaFile,
-                            " -O ", fastaDict)
-
-
-              print(cmd);system(cmd);
-            }
 
             #create intervals file (.intervals_list) from .bed file
             interval_list<-paste0(intervalListFolder,"/list.interval_list")
@@ -113,7 +106,9 @@ for (name in names(datasets)) {
 
               print(cmd_interval);system(cmd_interval);
             }
+
             for (bam in bamFiles){
+              #run ColletReadCounts
               print(basename(bam))
               sample_name<-sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(bam))
               cmd_read_counts <- paste0( "apptainer run ",
@@ -127,18 +122,16 @@ for (name in names(datasets)) {
               print(cmd_read_counts);system(cmd_read_counts);
             }
 
-            #GATK: Determine contig ploidy ----
+            #run Determine contig ploidy
             #merge all hdf5 files forrunning DetermineGermlineContigPloidy
             hdf5s <- list.files(readCountsFolder, pattern = '*.hdf5$', full.names = TRUE)
             all_hdf5_names<- paste(hdf5s, collapse=" -I ")
             contigFile <- file.path(params$contigFile)
             cmd_det_contig_ploidy <- paste0( "apptainer run ",
-                                             #"-B ", currentFolder, " ",
-                                             "-B  /data ",
+                                             "-B ", currentFolder, " ",
                                              singularityFolder,
                                              ' gatk --java-options "-Xmx30G" DetermineGermlineContigPloidy',
                                              " -I ", all_hdf5_names,
-                                             #" -L ", interval_list,
                                              " --contig-ploidy-priors ", contigFile,
                                              " -O ", contigPloidy,
                                              " --output-prefix contig")
@@ -147,15 +140,18 @@ for (name in names(datasets)) {
           }
         }
 
+
+      #End of common part
+
+        #Run evaluate: list all the files of the parameters that have to be evaluated
         filesParams <- list.files(paste0(getwd(), "/evaluate_parameters/", algName, "/", name), pattern= "params.yaml", recursive=TRUE, full.names=TRUE)
 
 
-        #Run benchmark for every param
+        #Run benchmark for every parameter file
 
         for(j in seq_len(length(filesParams))){
-
-        #print(j)
         num.tool <- which(stringr::str_detect(tools.run, algName))
+        #create the parameters that should be given to job.sh file
         query <- paste(tools.run[num.tool],
                      filesParams[j],
                        file.path(paste(getwd(), "evaluate_parameters",algName, name, sep="/"), "datasets.yaml"),
