@@ -1,7 +1,5 @@
-# 21 april
-
 # Runs GermlineCNVcaller over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runGermlineCNVcaller.R [GermllineCNVcaller_params_file] [datasets_params_file]
+#USAGE: Rscript runGermlineCNVcaller.R [GermllineCNVcaller_params_file] [datasets_params_file] [include_temp_files]
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source("utils/utils.r") # Load utils functions
@@ -18,8 +16,6 @@ if(length(args)>0) {
 } else {
   paramsFile <- "params.yaml"
   datasetsParamsFile <- "../../datasets.yaml"
-  #datasetsParamsFile <- "../../../CNVbenchmarkeR_all/datasets_ICR96.yaml" #REMOVE
-  # paramsFile <- "germlineCNVcallerParams.yaml"
   includeTempFiles <- "true"
 }
 
@@ -39,21 +35,18 @@ condaFolder <- params$condaFolder
 singularityFolder <- params$singularityFolder
 contigFile <- file.path(params$contigFile)
 currentFolder <- getwd()
-#currentFolder <- "/data/croca_data/CNVbenchmarkeR2"
 
 
 # Dataset iteration ----
 
-# go over datasets and run cnvkit for those which are active
+# go over datasets and run germilineCNVcaller for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
   if (dataset$include){
     print(paste("Starting GermlineCNVcaller for", name, "dataset", sep=" "))
 
-    #create input files required for running GATK
-
-
-    print("check if outputfolder exists:")
+   
+    #check if outputfolder exists:
 
     if (!is.null(params$outputFolder)) {
       if(stringr::str_detect(params$outputFolder, "^./")) params$outputFolder <- stringr::str_sub(params$outputFolder, 3, stringr::str_length(params$outputFolder))
@@ -61,9 +54,6 @@ for (name in names(datasets)) {
     } else {
       outputFolder <- file.path(getwd(), "output", paste0("germlineCNVcaller-", name))
     }
-
-    print(outputFolder)
-
 
     unlink(outputFolder, recursive = TRUE);
     dir.create(outputFolder)
@@ -76,6 +66,7 @@ for (name in names(datasets)) {
     fastaFile <- file.path(dataset$fasta_file)
     fastaDict <- file.path(dataset$fasta_dict)
 
+    #create input files required for running GATK
 
     # Interval list----
     #create intervals file (.intervals_list) from .bed file
@@ -94,70 +85,118 @@ for (name in names(datasets)) {
       print(cmd_interval);system(cmd_interval);
     }
 
+    # GATK: Preprocess intervals ----
+    preprocessInterval_list <- ifelse(evaluateParameters=="false",
+                                      paste0(outputFolder,"/preprocessed_intervals.interval_list"),
+                                      paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/preprocessed_intervals.interval_list"))
+    
 
+    if(!file.exists(preprocessInterval_list)){
+      cmd_preprocessIntervals<-paste0( "apptainer run ",
+                                       "-B ", dirname(fastaFile), " ",
+                                       singularityFolder,
+                                       ' gatk --java-options "-Xmx30G" PreprocessIntervals',
+                                       " -R ", fastaFile,
+                                       " -L ", interval_list,
+                                       " -imr OVERLAPPING_ONLY", 
+                                       " -O ", preprocessInterval_list )
+      
+      print(cmd_preprocessIntervals);system(cmd_preprocessIntervals);
+    }
+    
+    # GATK: Annotate intervals----  
+    
+    annotatedIntervals_list <- ifelse(evaluateParameters=="false",
+                                      paste0(outputFolder,"/annotated_intervals.interval_list"),
+                                      paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/annotated_intervals.interval_list"))
+    
+    
+    if(!file.exists(annotatedIntervals_list)){
+      cmd_annotateIntervals<-paste0( "apptainer run ",
+                                     "-B ", dirname(fastaFile), " ",
+                                     singularityFolder,
+                                     ' gatk --java-options "-Xmx30G" AnnotateIntervals',
+                                     " -R ", fastaFile,
+                                     " -L ", preprocessInterval_list,
+                                     " -imr OVERLAPPING_ONLY", 
+                                     " -O ", annotatedIntervals_list )
+      
+      print(cmd_annotateIntervals);system(cmd_annotateIntervals);
+    }
+    
+    # GATK: Collect read counts ----
     # Get bam files
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
-print(evaluateParameters)
     readCountsFolder <- ifelse(evaluateParameters=="false",
                                   file.path(outputFolder, "ReadCounts"),
                                   paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/ReadCounts"))
-print(readCountsFolder)
-    if(!dir.exists(readCountsFolder)| dir.exists(readCountsFolder) &&  length(list.files(readCountsFolder))!=length(bamFiles)){
 
+    if(!dir.exists(readCountsFolder)| dir.exists(readCountsFolder) &&  length(list.files(readCountsFolder))!=length(bamFiles)){
       dir.create(readCountsFolder, showWarnings = FALSE)
-    print(paste("Starting at", Sys.time(), "collect Read counts"))
-    for (bam in bamFiles){
-      print(basename(bam))
-      sample_name<-sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(bam))
-      cmd_read_counts <- paste0( "apptainer run ",
+      print(paste("Starting at", Sys.time(), "collect Read counts"))
+      for (bam in bamFiles){
+        print(basename(bam))
+        sample_name<-sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(bam))
+        cmd_read_counts <- paste0( "apptainer run ",
                                  " -B ", bamsDir, " ",
                                  singularityFolder,
                                  ' gatk --java-options "-Xmx30G" CollectReadCounts',
                                   " -I ", bamsDir,"/",sample_name, ".bam",
-                                  " -L ", interval_list,
+                                  " -L ", preprocessInterval_list,
                                   " --interval-merging-rule OVERLAPPING_ONLY",
                                   " -O ", readCountsFolder,"/", sample_name, ".counts.hdf5")
-      print(cmd_read_counts);system(cmd_read_counts);
-    }
-    }
+        print(cmd_read_counts);system(cmd_read_counts);
+        }
+      }
 
 
     #GATK: Determine contig ploidy ----
     #merge all hdf5 files forrunning DetermineGermlineContigPloidy
     hdf5s <- list.files(readCountsFolder, pattern = '*.hdf5$', full.names = TRUE)
-
-    #hdf5s <- list.files(paste0("/home/croca/Benchmark/CNVbenchmarkeR_all/output/germlineCNVcaller-", name), pattern = '*.hdf5$', full.names = TRUE)
-    #hdf5s <- list.files(paste0("/data/croca_data/CNVbenchmarkeR2/output/germlineCNVcaller-", name), pattern = '*.hdf5$', full.names = TRUE)
     all_hdf5_names<- paste(hdf5s, collapse=" -I ")
+    
+    
+    # GATK: Filter intervals----  
+    filteredIntervals_list <- ifelse(evaluateParameters=="false",
+                                     paste0(outputFolder,"/filtered_intervals.interval_list"),
+                                     paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/filtered_intervals.interval_list"))
+    
+    if(!file.exists(filteredIntervals_list)){
+      cmd_filterIntervals_list<-paste0( "apptainer run ",
+                                        singularityFolder,
+                                        ' gatk --java-options "-Xmx30G" FilterIntervals',
+                                        " -L ",preprocessInterval_list,
+                                        " -I ", all_hdf5_names,
+                                        " --annotated-intervals ", annotatedIntervals_list,
+                                        " --interval-merging-rule OVERLAPPING_ONLY",
+                                        " -O ", filteredIntervals_list )
+      
+      print(cmd_filterIntervals_list);system(cmd_filterIntervals_list);
+    }
 
-    #contigPloidy <- file.path(paste0(outputFolder, "/contigPloidy"))
+    #GATK: Determine contig ploidy ----
+
     contigPloidy <- ifelse(evaluateParameters=="false",
                                file.path(outputFolder, "contigPloidy"),
                                paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/contigPloidy"))
 
-    #contigPloidy <- file.path(paste0(paste0("/data/croca_data/CNVbenchmarkeR2/output/germlineCNVcaller-", name), "/contigPloidy"))
     if(!dir.exists(contigPloidy)){
-
-    # if (dir.exists(contigPloidy)){
-    #   unlink(contigPloidy, recursive = T)
-    #   }
     dir.create(contigPloidy)
     print(paste("Starting at", Sys.time(), "contigPloidy"))
     cmd_det_contig_ploidy <- paste0( "apptainer run ",
-                                     #"-B ", currentFolder, " ",
-                                     "-B  /data ",
                                      singularityFolder,
                                      ' gatk --java-options "-Xmx30G" DetermineGermlineContigPloidy',
                                      " -I ", all_hdf5_names,
-                                     #" -L ", interval_list,
+                                     " -L ", filteredIntervals_list,
+                                     " --interval-merging-rule OVERLAPPING_ONLY",
                                      " --contig-ploidy-priors ", contigFile,
                                      " -O ", contigPloidy,
                                      " --output-prefix contig")
 
     print(cmd_det_contig_ploidy);system(cmd_det_contig_ploidy);
-}
-    #
-    #
+    }
+    
+    
     # #GATK: Run GermlineCNVcaller ----
      cnvRaw <- file.path(paste0(outputFolder, "/cnvRaw"))
      if (!file.exists(cnvRaw)){
@@ -168,13 +207,13 @@ print(readCountsFolder)
      }
      print(paste("Starting at", Sys.time(), "GermlienCNVCaller"))
      cmd_GermlineCNVCaller<- paste0( "apptainer run ",
-                                     #"-B ", currentFolder, " ",
-                                     "-B  /data ",
+                                     "-B ", currentFolder, " ",
                                      singularityFolder,
                                      ' gatk --java-options "-Xmx30G" GermlineCNVCaller ',
                                      " --run-mode COHORT",
-                                     " -L ", interval_list,
+                                     " -L ", filteredIntervals_list,
                                      " --interval-merging-rule OVERLAPPING_ONLY",
+                                     " --annotated-intervals ", annotatedIntervals_list,
                                      " --contig-ploidy-calls ", contigPloidy, "/contig-calls",
                                      " -I ", all_hdf5_names,
                                      " -O ", cnvRaw,
@@ -227,9 +266,9 @@ print(readCountsFolder)
 
      print(cmd_GermlineCNVCaller);system(cmd_GermlineCNVCaller);
 
-##GATK: Run PostprocessingGermlineCNVcaller
-#
-     cnvProcessed <- file.path(paste0(outputFolder, "/cnvProcessed"))
+    ##GATK: Run PostprocessingGermlineCNVcaller
+
+    cnvProcessed <- file.path(paste0(outputFolder, "/cnvProcessed"))
     if (!file.exists(cnvProcessed)){
       dir.create(cnvProcessed)
     } else {
@@ -237,14 +276,13 @@ print(readCountsFolder)
       dir.create(cnvProcessed, recursive=TRUE)
     }
 
-     callsRaw <- list.dirs(path=paste0(cnvRaw,"/cohort_run-calls"),  full.names = TRUE, recursive= FALSE)
-     ploidyRaw <- list.dirs(path=paste0(contigPloidy,"/contig-calls"),  full.names = TRUE, recursive= FALSE)
-    print(callsRaw)
+    callsRaw <- list.dirs(path=paste0(cnvRaw,"/cohort_run-calls"),  full.names = TRUE, recursive= FALSE)
+    ploidyRaw <- list.dirs(path=paste0(contigPloidy,"/contig-calls"),  full.names = TRUE, recursive= FALSE)
+    
     print(paste("Starting at", Sys.time(), "Germline postProcess"))
      for (i in 1:length(callsRaw)){
        cmd_GermlineCNVCaller<- paste0( "apptainer run ",
-                                       #"-B ", currentFolder, " ",
-                                       "-B  /data ",
+                                       "-B ", currentFolder, " ",
                                        singularityFolder,
                                        ' gatk --java-options "-Xmx30G" PostprocessGermlineCNVCalls',
                                        " --sample-index ",  i-1,
@@ -302,8 +340,8 @@ print(readCountsFolder)
      }
 
   }
-  }
-#
+}
+
 
 
 
