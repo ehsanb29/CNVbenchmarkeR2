@@ -118,13 +118,6 @@ if (tools$atlasCNV == T){
   system(cmd)
 }
 
-# CNVZ
-if (tools$CNVZ == T){
-  cat(as.character(Sys.time()), " - Executing CNV-Z\n")
-  cmd <- paste("Rscript tools/CNVZ/runCNVZ.r tools/CNVZ/CNVZParams.yaml", args$datasets, args$include_temp_files, "false", ">",  paste0("logs/CNVZ_", start.benchmark, ".log 2>&1"))
-  system(cmd)
-}
-
 
 
 
