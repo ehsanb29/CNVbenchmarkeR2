@@ -79,8 +79,8 @@ An SGE cluster system has to be available.
 Rscript evaluate_parameters/setUpFolders.R [-t tools_yaml] [-d datasets_yaml]
 ```
 3. Execute the runEvaluate script. This step should be performed in the CNVbenchmarkeR2 folder.
+
 ```
-cd ..
 Rscript evaluate_parameters/runEvaluate.R [-t tools_file] [-d datasets_file] [-f include_temp_files]
 
 ```
