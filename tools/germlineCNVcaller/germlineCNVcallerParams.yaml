@@ -1,19 +1,15 @@
-gatkFolder: /usr/local/opt/gatk-4.3.0.0/
-contigFile: /home/emunte/CNVbenchmarkeR2/tools/germlineCNVcaller/contig-ploidy-prior.tsv
-picardFolder: /usr/local/opt/picard-2.27.4/jar/picard.jar
-condaFolder: /usr/local/opt/anaconda-2022.05/condabin/conda
-singularityFolder: /home/emunte/apptainer-sifs/gatk_4.2.6.1.sif
+# Paths
+picard: /myPath/picard.jar
+gatk: /myPath/singularity_containers/gatk-4.5.0.0.sif
 
-#germlineCNVcaller parameters
-
-#Optional Arguments:
-pActive: 0.01 					#<Double> Prior probability of treating an interval as CNV-active (in a CNV-active domains, all copy-number states are equally likely to be called). Default value: 0.01. 
-pAlt: 1.0E-6					#<Double> Total prior probability of alternative copy-number states (the reference copy-number is set to the contig integer ploidy)  Default value: 1.0E-6. 
-samplePsiScale: 1.0E-4			#<Double> Typical scale of sample-specific correction to the unexplained variance.  Default value: 1.0E-4. 
+# GermlineCNVcaller parameters
+pActive: 0.1 # 0.01 					#<Double> Prior probability of treating an interval as CNV-active (in a CNV-active domains, all copy-number states are equally likely to be called). Default value: 0.01. 
+pAlt: 0.0005 # 1.0E-6					#<Double> Total prior probability of alternative copy-number states (the reference copy-number is set to the contig integer ploidy)  Default value: 1.0E-6. 
+samplePsiScale: 0.01  # 1.0E-4			#<Double> Typical scale of sample-specific correction to the unexplained variance.  Default value: 1.0E-4. 
 mappingErrorRate: 0.01			#<Double> Typical mapping error rate.  Default value: 0.01. 
 classCoherenceLength: 10000.0	  		#<Double> Coherence length of CNV-active and CNV-silent domains (in the units of bp).  Defaultvalue: 10000.0. 
 cnvCoherenceLength: 10000.0			#<Double> Coherence length of CNV events (in the units of bp).  Default value: 10000.0. 
-intervalPsiScale: 0.001 			#<Double> Typical scale of interval-specific unexplained variance.  Default value: 0.001. 
+intervalPsiScale: 0.01  # 0.001 			#<Double> Typical scale of interval-specific unexplained variance.  Default value: 0.001. 
 activeClassPaddingHybridMode: 50000		#<Integer> If copy-number-posterior-expectation-mode is set to HYBRID, CNV-active intervals determined at any time will be padded by this value (in the units of bp) in order to obtain the set of intervals on which copy number posterior expectation is performed exactly.  Default value: 50000. 
 adamaxBeta1: 0.9    	 			#<Double> Adamax optimizer first moment estimation forgetting factor.  Default value: 0.9. 
 adamaxBeta2: 0.99      			#<Double> Adamax optimizer second moment estimation forgetting factor.  Default value: 0.99. 
@@ -39,20 +35,16 @@ intervalExclusionPaddingG: 0  			#<Integer> Same argument as -ixp. Amount of pad
 intervalPaddingG: 0 				#<Integer> Same argument as -ip. Amount of padding (in bp) to add to each interval you are including.  Default value: 0.
 copyNumberPosteriorExpectationMode: HYBRID #<CopyNumberPosteriorExpectationMode> The strategy for calculating copy number posterior expectations in the coverage denoising model.  Default value HYBRID. Possible values {MAP, EXACT, HYBRID} 
 gcCurveStandardDeviation: 1.0 		#<Double> Prior standard deviation of the GC curve from flat.  Default value: 1.0. 
-maxBiasFactors: 5 				#<Integer> Maximum number of bias factors.  Default value: 5. 
+maxBiasFactors: 6  # 5 				#<Integer> Maximum number of bias factors.  Default value: 5. 
 maxCallingIters: 10 				#<Integer> Maximum number of internal self-consistency iterations within each calling step.  Default value: 10. 
 maxAdviIterFirstEpoch: 5000			#<Integer> Maximum ADVI iterations in the first epoch.  Default value: 5000. 
 maxAdviIterSubsequentEpochs: 200		#<Integer> Maximum ADVI iterations in subsequent epochs.  Default value: 200. 
 maxTrainingEpochs: 50				#<Integer> Maximum number of training epochs.  Default value: 50. 
 minTrainingEpochs: 10 			#<Integer> Minimum number of training epochs.  Default value: 10. 
-useJdkDeflater: false				#<Boolean> Same argument as -jdk-deflater. Whether to use the JdkDeflater (as opposed to IntelDeflater)  Default value: false. Possible values: {true,false} 
-useJdkInflater: false				#<Boolean> Same argument as -jdk-inflater. Whether to use the JdkInflater (as opposed to IntelInflater)  Default value: false. Possible values: {true,false} 
 disableAnnealing: false 			#<Boolean> (advanced) Disable annealing.  Default value: false. Possible values: {true, false} 
-disableCaller: false 				#<Boolean> (advanced) Disable caller.  Default value: false. Possible values: {true, false} 
 disableSampler: false 				#<Boolean> (advanced) Disable sampler.  Default value: false. Possible values: {true, false} 
-
-intervalExclusionPaddingPp: 0 		#Amount of padding (in bp) to add to each interval you are excluding.
-intervalPaddingPp: 0				#Amount of padding (in bp) to add to each interval you are including.
+intervalExclusionPaddingPp: 0 		# (PostprocessGermlineCNVCalls) Amount of padding (in bp) to add to each interval you are excluding.
+intervalPaddingPp: 0				# (PostprocessGermlineCNVCalls) Amount of padding (in bp) to add to each interval you are including.
 
 
 
