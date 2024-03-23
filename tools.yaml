@@ -1,6 +1,6 @@
 # define which tools will be run in the benchmark. Set 'true to be included', 'false' to omit
 decon: true
-panelcn: true
+panelcnmops: true
 convading: true
 exomedepth: true
 clincnv: true
