@@ -62,7 +62,6 @@ for (name in names(datasets)) {
         #for every_option
         for(j in seq_len(length(options_param))){
           value_param <- options_param[j]%>% unlist()
-          print(value_param)
           folder_param_value <- file.path(folder_param, value_param )
           dir.create(folder_param_value , showWarnings = FALSE)
 
