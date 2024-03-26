@@ -1,15 +1,15 @@
 # Paths
-picard: /myPath/picard.jar
-gatk: /myPath/singularity_containers/gatk-4.5.0.0.sif
+picard: /mnt/antares/UBOP/soft/picard/2.27.4/picard.jar
+gatk: /mnt/typhon/singularity_containers/images/gatk-4.5.0.0.sif
 
 # GermlineCNVcaller parameters
-pActive: 0.1 # 0.01 					#<Double> Prior probability of treating an interval as CNV-active (in a CNV-active domains, all copy-number states are equally likely to be called). Default value: 0.01. 
-pAlt: 0.0005 # 1.0E-6					#<Double> Total prior probability of alternative copy-number states (the reference copy-number is set to the contig integer ploidy)  Default value: 1.0E-6. 
-samplePsiScale: 0.01  # 1.0E-4			#<Double> Typical scale of sample-specific correction to the unexplained variance.  Default value: 1.0E-4. 
+pActive: 0.1 #  					#<Double> Prior probability of treating an interval as CNV-active (in a CNV-active domains, all copy-number states are equally likely to be called). Default value: 0.1. 
+pAlt: 0.0005 # 					#<Double> Total prior probability of alternative copy-number states (the reference copy-number is set to the contig integer ploidy)  Default value: 0.0005. 
+samplePsiScale: 0.01  # 			#<Double> Typical scale of sample-specific correction to the unexplained variance.  Default value: 0.01. 
 mappingErrorRate: 0.01			#<Double> Typical mapping error rate.  Default value: 0.01. 
 classCoherenceLength: 10000.0	  		#<Double> Coherence length of CNV-active and CNV-silent domains (in the units of bp).  Defaultvalue: 10000.0. 
 cnvCoherenceLength: 10000.0			#<Double> Coherence length of CNV events (in the units of bp).  Default value: 10000.0. 
-intervalPsiScale: 0.01  # 0.001 			#<Double> Typical scale of interval-specific unexplained variance.  Default value: 0.001. 
+intervalPsiScale: 0.01  #  			#<Double> Typical scale of interval-specific unexplained variance.  Default value: 0.01. 
 activeClassPaddingHybridMode: 50000		#<Integer> If copy-number-posterior-expectation-mode is set to HYBRID, CNV-active intervals determined at any time will be padded by this value (in the units of bp) in order to obtain the set of intervals on which copy number posterior expectation is performed exactly.  Default value: 50000. 
 adamaxBeta1: 0.9    	 			#<Double> Adamax optimizer first moment estimation forgetting factor.  Default value: 0.9. 
 adamaxBeta2: 0.99      			#<Double> Adamax optimizer second moment estimation forgetting factor.  Default value: 0.99. 
@@ -27,7 +27,6 @@ logEmissionSamplesPerRound: 50 		#<Integer> Log emission samples drawn per round
 logEmissionSamplingMedianRelError: 0.005	#<Double> Maximum tolerated median relative error in log emission sampling.  Default value: 0.005. 
 logEmissionSamplingRounds: 10		#<Integer> Log emission maximum sampling rounds.  Default value: 10. 
 logMeanBiasStandardDeviation: 0.1		#<Double> Standard deviation of log mean bias.  Default value: 0.1. 
-intervalMergingRule: ALL 			#<IntervalMergingRule> Same argument as -imr. Interval merging rule for abutting intervals  Default value ALL. Possible values {ALL,OVERLAPPING_ONLY} 
 intervalSetRule: UNION			#<IntervalSetRule> Same argument as -isr. Set merging approach to use for combining interval inputs  Default value UNION. Possible values:{UNION,INTERSECTION} 
 numSamplesCopyRatioApprox: 200 		#<Integer> Number of samples to draw from the final model approximation to estimate denoised copy number ratios. Note that this argument will not affect inference of the model.  Default value: 200. 
 numThermalAdviIters: 2500 			#<Integer> Number of thermal ADVI iterations (for DA-ADVI).  Default value: 2500. 
@@ -35,7 +34,7 @@ intervalExclusionPaddingG: 0  			#<Integer> Same argument as -ixp. Amount of pad
 intervalPaddingG: 0 				#<Integer> Same argument as -ip. Amount of padding (in bp) to add to each interval you are including.  Default value: 0.
 copyNumberPosteriorExpectationMode: HYBRID #<CopyNumberPosteriorExpectationMode> The strategy for calculating copy number posterior expectations in the coverage denoising model.  Default value HYBRID. Possible values {MAP, EXACT, HYBRID} 
 gcCurveStandardDeviation: 1.0 		#<Double> Prior standard deviation of the GC curve from flat.  Default value: 1.0. 
-maxBiasFactors: 6  # 5 				#<Integer> Maximum number of bias factors.  Default value: 5. 
+maxBiasFactors: 6  # 				#<Integer> Maximum number of bias factors.  Default value: 6. 
 maxCallingIters: 10 				#<Integer> Maximum number of internal self-consistency iterations within each calling step.  Default value: 10. 
 maxAdviIterFirstEpoch: 5000			#<Integer> Maximum ADVI iterations in the first epoch.  Default value: 5000. 
 maxAdviIterSubsequentEpochs: 200		#<Integer> Maximum ADVI iterations in subsequent epochs.  Default value: 200. 
