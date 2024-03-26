@@ -14,6 +14,7 @@ createIntervalList <- function(picard, bedFile, destPath, fastaDict){
   }  
 }
 
+
 # Calls GATK PreprocessIntervals
 preprocessIntervals <- function(gatk, fastaFile, outputFolder, interval_list, destPath){
   
