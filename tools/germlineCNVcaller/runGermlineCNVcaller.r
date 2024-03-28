@@ -163,11 +163,8 @@ for (name in names(datasets)) {
                                       "--log-emission-sampling-median-rel-error", params$logEmissionSamplingMedianRelError,
                                       "--log-emission-sampling-rounds", params$logEmissionSamplingRounds,
                                       "--log-mean-bias-standard-deviation", params$logMeanBiasStandardDeviation,
-                                      "--interval-set-rule", params$intervalSetRule,
                                       "--num-samples-copy-ratio-approx", params$numSamplesCopyRatioApprox,
                                       "--num-thermal-advi-iters", params$numThermalAdviIters,
-                                      "--interval-exclusion-padding", params$intervalExclusionPaddingG,
-                                      "--interval-padding", params$intervalPaddingG,
                                       "--copy-number-posterior-expectation-mode", params$copyNumberPosteriorExpectationMode,
                                       "--gc-curve-standard-deviation", params$gcCurveStandardDeviation,
                                       "--max-bias-factors", params$maxBiasFactors,
@@ -176,8 +173,7 @@ for (name in names(datasets)) {
                                       "--max-advi-iter-subsequent-epochs", params$maxAdviIterSubsequentEpochs,
                                       "--max-training-epochs", params$maxTrainingEpochs,
                                       "--min-training-epochs", params$minTrainingEpochs,
-                                      "--disable-annealing", params$disableAnnealing,
-                                      "--disable-sampler", params$disableSampler)
+                                      "--disable-annealing", params$disableAnnealing)
 
     print(cmd_GermlineCNVCaller);system(cmd_GermlineCNVCaller);
 
@@ -204,10 +200,7 @@ for (name in names(datasets)) {
                                      "--model-shard-path", paste0(cnvRaw, "/cohort_run-model"),
                                      "--output-genotyped-intervals", paste0(cnvProcessed, "/SAMPLE_", i-1 ,"_genotyped_intervals.vcf"),
                                      "--output-genotyped-segments", paste0(cnvProcessed, "/SAMPLE_", i-1  ,"_genotyped_segments.vcf"),
-                                     "--output-denoised-copy-ratios", paste0(cnvProcessed, "/SAMPLE_", i-1 ,"_denoised_copy_ratios.tsv"),
-                                     #optional
-                                     "--interval-exclusion-padding", params$intervalExclusionPaddingPp,
-                                     "--interval-padding", params$intervalPaddingPp)
+                                     "--output-denoised-copy-ratios", paste0(cnvProcessed, "/SAMPLE_", i-1 ,"_denoised_copy_ratios.tsv"))
        print(cmd_GermlineCNVCaller);system(cmd_GermlineCNVCaller)
     }
 

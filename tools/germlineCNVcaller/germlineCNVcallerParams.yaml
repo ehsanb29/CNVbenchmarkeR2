@@ -27,11 +27,8 @@ logEmissionSamplesPerRound: 50 		#<Integer> Log emission samples drawn per round
 logEmissionSamplingMedianRelError: 0.005	#<Double> Maximum tolerated median relative error in log emission sampling.  Default value: 0.005. 
 logEmissionSamplingRounds: 10		#<Integer> Log emission maximum sampling rounds.  Default value: 10. 
 logMeanBiasStandardDeviation: 0.1		#<Double> Standard deviation of log mean bias.  Default value: 0.1. 
-intervalSetRule: UNION			#<IntervalSetRule> Same argument as -isr. Set merging approach to use for combining interval inputs  Default value UNION. Possible values:{UNION,INTERSECTION} 
 numSamplesCopyRatioApprox: 200 		#<Integer> Number of samples to draw from the final model approximation to estimate denoised copy number ratios. Note that this argument will not affect inference of the model.  Default value: 200. 
 numThermalAdviIters: 2500 			#<Integer> Number of thermal ADVI iterations (for DA-ADVI).  Default value: 2500. 
-intervalExclusionPaddingG: 0  			#<Integer> Same argument as -ixp. Amount of padding (in bp) to add to each interval you are excluding.  Default value: 0. 
-intervalPaddingG: 0 				#<Integer> Same argument as -ip. Amount of padding (in bp) to add to each interval you are including.  Default value: 0.
 copyNumberPosteriorExpectationMode: HYBRID #<CopyNumberPosteriorExpectationMode> The strategy for calculating copy number posterior expectations in the coverage denoising model.  Default value HYBRID. Possible values {MAP, EXACT, HYBRID} 
 gcCurveStandardDeviation: 1.0 		#<Double> Prior standard deviation of the GC curve from flat.  Default value: 1.0. 
 maxBiasFactors: 6  # 				#<Integer> Maximum number of bias factors.  Default value: 6. 
@@ -41,10 +38,3 @@ maxAdviIterSubsequentEpochs: 200		#<Integer> Maximum ADVI iterations in subseque
 maxTrainingEpochs: 50				#<Integer> Maximum number of training epochs.  Default value: 50. 
 minTrainingEpochs: 10 			#<Integer> Minimum number of training epochs.  Default value: 10. 
 disableAnnealing: false 			#<Boolean> (advanced) Disable annealing.  Default value: false. Possible values: {true, false} 
-disableSampler: false 				#<Boolean> (advanced) Disable sampler.  Default value: false. Possible values: {true, false} 
-intervalExclusionPaddingPp: 0 		# (PostprocessGermlineCNVCalls) Amount of padding (in bp) to add to each interval you are excluding.
-intervalPaddingPp: 0				# (PostprocessGermlineCNVCalls) Amount of padding (in bp) to add to each interval you are including.
-
-
-
-
