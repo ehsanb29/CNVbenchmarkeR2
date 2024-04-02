@@ -1,19 +1,18 @@
-#!/bin/bash
-#SBATCH --time=3000
-#SBATCH --mem 48000M
-#SBARCH --mem-per-cpu 48000M
-#SBATCH --nodes=1
-#SBATCH --job-name="TEST48gb"
-#SBATCH --cpus-per-task=8
-#SBATCH --mail-user emunte@idibell.cat
-#SBATCH --mail-type BEGIN        # send email when job begins
-#SBATCH --mail-type END          # send email when job ends
-#SBATCH --mail-type FAIL         # send email if job fails
+#$ -S /bin/bash
+#$ -e /myPath/output.txt
+#$ -o /myPath/output.txt
 
+# Determine number of threads
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
 
+# Create temp dir for GATK
+mkdir /tmp/tmpGATK
+tmp_dir=$(mktemp -p /tmp/tmpGATK -d)
+echo $tmp_dir
+export THEANO_FLAGS="base_compiledir=$tmp_dir"
 
-echo "Run at:"
-# Param
+# Load vars
 script=$1
 params=$2
 dataset=$3
@@ -21,10 +20,15 @@ include_dir=$4
 evaluate_par=$5
 log=$6
 
-#echo Rscript $script $params $dataset $include_dir > $log 2>&1
-srun --mem 48000M -c 8 Rscript $script $params $dataset $include_dir $evaluate_par > $log 2>&1
 
+# Load modules
+module load apps/java-17
+module load apps/R-4.1.2
+module load apps/singularity
 
+# Go to benchmark folder and run
+cd /myPath/CNVbenchmarkeR2/
+Rscript $script $params $dataset $include_dir $evaluate_par > $log 2>&1
 
-echo "Finished" 
-
+# Remove tmp dr
+rm -r $tmp_dir
