@@ -5,6 +5,7 @@ suppressPackageStartupMessages(library(yaml))
 library(methods)
 library("optparse")
 library("dplyr")
+source("tools/germlineCNVcaller/germlineCNVcallerUtils.r") # Load GATK wrap functions
 options(scipen = 999)
 
 option_list <- list(
@@ -25,146 +26,150 @@ tools.run <- list.files(paste0(getwd(),"/tools"), pattern="run", recursive=T, fu
 
 #loop through each dataset
 for (name in names(datasets)) {
+  
   dataset <- datasets[[name]]
-  if (dataset$include){   # Check if the dataset is set to be included
-    for (i in seq_len(length(tools))){  # Loop through each tool set as TRUE
+  
+  if (dataset$include){   
+    
+    # Loop through each tool
+    for (i in seq_len(length(tools))){  
+      
       if(isTRUE(tools[[i]])){
+        
         algName <- names(tools[i])
         params <- yaml.load_file(paste0("tools/", algName, "/", algName, "Params.yaml"))
 
-        #Common part: # Common part: Certain steps for Viscap, AtlasCNV, and Germline are computed once for all parameter executions to save time and space, as the output of these steps remains constant regardless of parameter changes.
+        # Run common part (precalc) for some tools  -----
+        
+        # Common part: Certain steps for Viscap, AtlasCNV, and GermlineCNVcaller have a "precalc" phase that do not depend on
+        # on parameter values (.yaml) so it can be run only once for all parameter executions. This saves cpu time and disk space.
+        
         ##Common part for Viscap and AtlasCNV:  Create Depth of Coverage files
         if(algName == "viscap" | algName == "atlasCNV"){
           depthCoverageFolder <- paste0("./evaluate_parameters/", algName, "/", name, "/DepthOfCoverage")
 
-          if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder))<7){
+          if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder)) < 7) {
+            
             #get files and folders
             bamsDir <- file.path(dataset$bams_dir)
             bedFile <- file.path(dataset$bed_file)
             fastaFile <- file.path(dataset$fasta_file)
-            gatkFolder<- params$gatkFolder
             bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
 
             #create depthCoverageFolder
             dir.create(depthCoverageFolder, showWarnings = FALSE)
             bam <- basename(bamFiles) %>% tools::file_path_sans_ext()
             for (i in seq_len(length(bamFiles))){
-              cmd <- paste(file.path(gatkFolder, "gatk"),  "DepthOfCoverage",
+              cmd <- paste("singularity exec ", 
+                           " -B ", paste0(bamsDir), " ",
+                           params$gatk,  "DepthOfCoverage",
                            "-R",  fastaFile,
                            "-I", bamFiles[i],
                            "-O",  ifelse(algName == "viscap",
                                          file.path(depthCoverageFolder,bam[i]),
                                          file.path(depthCoverageFolder,paste0(bam[i], ".DATA"))),
                            "--output-format", "TABLE",
-                           #" --disable-sequence-dictionary-validation true ",
                            "-L",  bedFile )
               paste(cmd);system(cmd)
             }
           }
         }
 
-        ##Common part for GermlineCNV: Interval_list, collectReadCounts and DetermineGermlineContigPloidy
+        ##Common part for GermlineCNVcaller: Interval_list, PreprocessIntervals, AnnotateIntervals, FilterIntervals, collectReadCounts and DetermineGermlineContigPloidy
         if(algName == "germlineCNVcaller"){
+          
           #Create path to folders
-          preCal <- paste0("./evaluate_parameters/", algName, "/", name, "/preCalculated")
-          readCountsFolder <- paste0(preCal, "/ReadCounts")
-          intervalListFolder <- paste0(preCal, "/IntervalList")
-          contigPloidy <- paste0(preCal, "/contigPloidy")
+          preCalcFolder <- paste0("./evaluate_parameters/", algName, "/", name, "/preCalculated")
+          readCountsFolder <- paste0(preCalcFolder, "/ReadCounts")
+          intervalListFolder <- paste0(preCalcFolder, "/IntervalList")
+          contigPloidyFolder <- paste0(preCalcFolder, "/contigPloidy")
+          contigPriorsFile <- file.path(getwd(), "tools/germlineCNVcaller/contig-ploidy-prior.tsv")
 
-          #get bams
+          # get dataset paths
           bamsDir <- file.path(dataset$bams_dir)
           bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
+          bedFile <- file.path(dataset$bed_file)
+          fastaFile <- file.path(dataset$fasta_file)
+          fastaDict <- file.path(dataset$fasta_dict)
 
-          if(!dir.exists(readCountsFolder)| dir.exists(readCountsFolder) &&  length(list.files(readCountsFolder))!=length(bamFiles)){
+          
+          # launch precalc part if contig DetermineContigPloidy did not finished
+          if(!dir.exists(readCountsFolder) | 
+             (dir.exists(readCountsFolder) && length(list.files(contigPloidyFolder, "*contig_ploidy.tsv", recursive = T)) != length(bamFiles)) ){
+            
             #create directories
-            dir.create(preCal, showWarnings = FALSE)
+            dir.create(preCalcFolder, showWarnings = FALSE)
             dir.create(readCountsFolder, showWarnings = FALSE)
             dir.create(intervalListFolder, showWarnings = FALSE)
-            dir.create(contigPloidy, showWarnings = FALSE)
+            outputFolder <- file.path(getwd(), preCalcFolder)
 
-            #get singularity folder
-            singularityFolder <- params$singularityFolder
+            # Get gatk and contig file for later use
+            gatk <- params$gatk
 
-            #get bed file
-            bedFile <- file.path(dataset$bed_file)
+            # create intervals file (.intervals_list) from .bed file
+            interval_list <- paste0(intervalListFolder,"/list.interval_list")
+            createIntervalList(params$picard, bedFile, interval_list, fastaDict)
+            
+            # preprocess intervals
+            preprocessInterval_list <- paste0(intervalListFolder,"/preprocessed_intervals.interval_list")
+            preprocessIntervals(gatk, fastaFile, outputFolder, interval_list, preprocessInterval_list)
+            
+            # annotate intervals
+            annotatedIntervals_list <- paste0(intervalListFolder,"/annotated_intervals.interval_list")
+            annotateIntervals(gatk, fastaFile, outputFolder, preprocessInterval_list, annotatedIntervals_list)
 
-            #Get fasta and fasta dict
-            fastaFile <- file.path(dataset$fasta_file)
-            fastaDict <- file.path(dataset$fasta_dict)
-
-            #picard path
-            picardFolder <- params$picardFolder
-
-            #create intervals file (.intervals_list) from .bed file
-            interval_list<-paste0(intervalListFolder,"/list.interval_list")
-            if(!file.exists(interval_list)){
-              cmd_interval <- paste0( " java -jar ", picardFolder,
-                                      " BedToIntervalList",
-                                      " -I ", bedFile,
-                                      " -O ", interval_list,
-                                      " -SD ", fastaDict)
-
-              print(cmd_interval);system(cmd_interval);
-            }
-
-            for (bam in bamFiles){
-              #run ColletReadCounts
-              print(basename(bam))
-              sample_name<-sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(bam))
-              cmd_read_counts <- paste0( "apptainer run ",
-                                         " -B ", bamsDir, " ",
-                                         singularityFolder,
-                                         ' gatk --java-options "-Xmx30G" CollectReadCounts',
-                                         " -I ", bamsDir,"/", sample_name, ".bam",
-                                         " -L ", interval_list,
-                                         " --interval-merging-rule OVERLAPPING_ONLY",
-                                         " -O ", readCountsFolder,"/", sample_name, ".counts.hdf5")
-              print(cmd_read_counts);system(cmd_read_counts);
-            }
-
-            #run Determine contig ploidy
-            #merge all hdf5 files forrunning DetermineGermlineContigPloidy
+            # CollectReadCounts
+            collectReadCounts(gatk, bamFiles, outputFolder, preprocessInterval_list, readCountsFolder)
+            
+            # merge all hdf5 files for later use
             hdf5s <- list.files(readCountsFolder, pattern = '*.hdf5$', full.names = TRUE)
-            all_hdf5_names<- paste(hdf5s, collapse=" -I ")
-            contigFile <- file.path(params$contigFile)
-            cmd_det_contig_ploidy <- paste0( "apptainer run ",
-                                             "-B ", currentFolder, " ",
-                                             singularityFolder,
-                                             ' gatk --java-options "-Xmx30G" DetermineGermlineContigPloidy',
-                                             " -I ", all_hdf5_names,
-                                             " --contig-ploidy-priors ", contigFile,
-                                             " -O ", contigPloidy,
-                                             " --output-prefix contig")
+            all_hdf5_names <- paste(hdf5s, collapse=" -I ")
+            
+            # FilterIntervals
+            filteredIntervals_list <- paste0(intervalListFolder,"/filtered_intervals.interval_list")
+            filterIntervals(gatk, outputFolder, preprocessInterval_list, all_hdf5_names, annotatedIntervals_list, filteredIntervals_list)
 
-            print(cmd_det_contig_ploidy);system(cmd_det_contig_ploidy);
+            # Determine contig ploidy
+            determineContigPloidy(gatk, contigPloidyFolder, bamsDir, outputFolder, contigPriorsFile, all_hdf5_names, filteredIntervals_list)
+            
           }
-        }
+          
+        } 
+        # End of common part
 
-
-      #End of common part
+        # Launch tool -----
 
         #Run evaluate: list all the files of the parameters that have to be evaluated
         filesParams <- list.files(paste0(getwd(), "/evaluate_parameters/", algName, "/", name), pattern= "params.yaml", recursive=TRUE, full.names=TRUE)
 
 
         #Run benchmark for every parameter file
-
         for(j in seq_len(length(filesParams))){
-        num.tool <- which(stringr::str_detect(tools.run, algName))
-        #create the parameters that should be given to job.sh file
-        query <- paste(tools.run[num.tool],
-                     filesParams[j],
-                       file.path(paste(getwd(), "evaluate_parameters",algName, name, sep="/"), "datasets.yaml"),
-                       args$include_temp_files,
-                       "true",
-                       file.path(paste0(filesParams[j] %>% dirname() %>% dirname(),"/logs"),paste0(algName,".log")))
+          
+          #create the parameters that should be given to job.sh file
+          num.tool <- which(stringr::str_detect(tools.run, algName))
+          query <- paste(tools.run[num.tool],
+                       filesParams[j],
+                         file.path(paste(getwd(), "evaluate_parameters",algName, name, sep="/"), "datasets.yaml"),
+                         args$include_temp_files,
+                         "true",
+                         file.path(paste0(filesParams[j] %>% dirname() %>% dirname(),"/logs"),paste0(algName,".log")))
 
-        cmd <- paste("sbatch evaluate_parameters/job.sh", query)
-        print(cmd, quote=FALSE)
-        system(cmd)
+          # Get job name
+          parts <- strsplit(dirname(filesParams[j]), "/")[[1]]
+          jobName <- paste0(parts[c(length(parts) - 2, length(parts) - 1)], collapse = "_")
 
+          # Launch
+          cmd <- paste("qsub -N", jobName, "evaluate_parameters/job.sh", query)
+          print(cmd, quote=FALSE); system(cmd)
+          
+          #if(j == 1){
+          #  break;
+          #}
+          
         }
       }
+      
     }
   }
 }
