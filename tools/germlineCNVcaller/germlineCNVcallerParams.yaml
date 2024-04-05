@@ -1,6 +1,6 @@
 # Paths
-picard: /mnt/antares/UBOP/soft/picard/2.27.4/picard.jar
-gatk: /mnt/typhon/singularity_containers/images/gatk-4.5.0.0.sif
+picard: /yourPath/picard.jar
+gatk: /yourPath/singularity_containers/images/gatk-4.5.0.0.sif
 
 # GermlineCNVcaller parameters
 pActive: 0.1 #  					#<Double> Prior probability of treating an interval as CNV-active (in a CNV-active domains, all copy-number states are equally likely to be called). Default value: 0.1. 
