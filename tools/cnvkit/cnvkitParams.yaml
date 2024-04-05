@@ -1,4 +1,4 @@
-cnvkitFolder: ~/cnvkit/bin/activate
+cnvkitFolder: /yourPath/cnvkit/bin/activate
 
 # default values
 minGapSizeAccess: 5000 #Minimum gap size between accessible sequence regions. Regions separated by less than this distance will be joined together.
