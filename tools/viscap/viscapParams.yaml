@@ -1,7 +1,5 @@
-viscapFolder: /home/croca/VisCap
-#viscapFolder: /home/emunte/tools/VisCap
-#gatkFolder: /home/emunte/tools/gatk-4.3.0.0
-gatkFolder: /usr/local/opt/gatk-4.3.0.0
+viscapFolder: /yourPath/VisCap
+gatkFolder: /yourPath/gatk
 
 
 # default
