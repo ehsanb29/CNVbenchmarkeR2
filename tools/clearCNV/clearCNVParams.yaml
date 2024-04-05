@@ -1,4 +1,4 @@
-clearCNVFolder: ~/clearcnv/bin/activate
+clearCNVFolder: /yourPath/clearcnv/bin/activate
 # default values
 cores: 20
 expected_artefacts: 0.02
