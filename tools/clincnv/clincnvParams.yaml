@@ -1,7 +1,6 @@
-clincnvFolder: /home/croca/ClinCNV
-ngsbitsFolder: /home/croca/.conda/envs/ngs-bits/bin
-#/home/croca/ngs-bits/bin
-condaFolder: /usr/local/opt/anaconda-2022.05/condabin/conda
+clincnvFolder: /yourPath/ClinCNV
+ngsbitsFolder: /yourPath/.conda/envs/ngs-bits/bin
+condaFolder: /yourPath/anaconda-2022.05/condabin/conda
 environmentName: ngs-bits
 
 # default values
