@@ -1,4 +1,4 @@
-cobaltFolder: ~/venv-cobalt/bin/activate
+cobaltFolder: /yourPath/venv-cobalt/bin/activate
 # default values
 threads: 2
 training_samples: 50
