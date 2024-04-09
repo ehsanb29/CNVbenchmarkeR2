@@ -5,6 +5,7 @@ suppressPackageStartupMessages(library(yaml))
 suppressPackageStartupMessages(library(stringr))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 
+#Functions----
 # translates DEL/DUP into a common format
 auxConvert <- function(x) {
   if (x == "DEL") return("deletion")
@@ -37,7 +38,6 @@ saveFailedROIs <- function(outputFolder){
 
 # Process convading alg. body
 processConvadingBody <- function(launchFile, inputFolder, controlsFolder, targetQcList, params){
-
   # from .txt tp select best control samples
   system(paste("perl", launchFile, "-mode StartWithMatchScore", "-inputDir" , inputFolder, "-controlsDir" , controlsFolder, "-outputDir", inputFolder))
 
@@ -56,11 +56,10 @@ processConvadingBody <- function(launchFile, inputFolder, controlsFolder, target
   # create final list
   system(paste("perl", launchFile, "-mode CreateFinalList", "-inputDir" , inputFolder, "-targetQcList", targetQcList,
                "-percentageLessReliableTargets", params$percentageLessReliableTargets, "-outputDir", inputFolder))
-
 }
 
-
-# Read args
+#Get parameters----
+## Read args----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
@@ -73,15 +72,16 @@ if(length(args)>0) {
   includeTempFiles <- "true"
 }
 
-#Load the parameters file
+##Load the parameters file----
 params <- yaml.load_file(convadingParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 
 # extract convading params
 convadingFolder <- file.path(params$convadingFolder)
 print(paste("Params for this execution:", list(params)))
+print(paste("Datasets for this execution:", list(datasets)))
 
-
+# Dataset iteration ----
 # go over datasets and run convading for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
@@ -203,7 +203,8 @@ for (name in names(datasets)) {
       targetQcList <- file.path(outputFolder, "targetQcList.txt")
       processConvadingBody(launchFile, outputFolder, controlsFolder, targetQcList, params)
     }
-
+    #Save results----
+    ##TXT file----
     # Add cnv.Type column to match common format
     for (file in list.files(outputFolder, "*list.txt$", full.names=TRUE)) {
       print(paste("Adding CNV.type column to file ", file))
@@ -213,7 +214,7 @@ for (name in names(datasets)) {
       write.table(data, file, sep="\t", row.names=FALSE, quote = FALSE)
     }
 
-    # Save results in GRanges format
+    ## GenomicRanges object----
     message("Saving GenomicRanges results")
     saveResultsFolderToGR(outputFolder, "best.score.longlist.txt", chrColumn = "CHR", startColumn = "START", endColumn = "STOP")
 
@@ -222,12 +223,13 @@ for (name in names(datasets)) {
 
     print(paste("convading for", name, "dataset finished", sep=" "))
     cat("\n\n\n")
-
+    
+    ##Temporary files----
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
   }
