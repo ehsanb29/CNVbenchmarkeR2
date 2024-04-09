@@ -6,6 +6,8 @@ suppressPackageStartupMessages(library(CODEX2))
 source(if (basename(getwd()) == "optimizers") "../utils/segment_targeted.R" else "utils/segment_targeted.R") # Load utils functions
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 
+
+#Functions----
 # translates del/dup to deletion/duplication
 auxCNname <- function(x) {
   if (x == "del") return("deletion")
@@ -143,7 +145,8 @@ getgc =function (ref, genome = NULL) {
 }
 
 
-# Read args
+#Get parameters----
+## Read args----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
@@ -156,13 +159,13 @@ if(length(args)>0) {
   includeTempFiles <- "true"
 }
 
-print(includeTempFiles)
-
-#Load the parameters file
+## Load the parameters file----
 params <- yaml.load_file(codex2ParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
+print(paste("Datasets for this execution:", list(datasets)))
 
+# Dataset iteration ----
 # go over datasets and run codex2 for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
@@ -189,40 +192,30 @@ for (name in names(datasets)) {
     # Do pre-calc part of the algorithm
     if (is.null(params$execution) || params$execution != "skipPrecalcPhase") {
 
-      # GET COVERAGE, GC, MAPP
+      
       # get bam directories, read in bed file, get sample names
       sampname <- as.matrix(unlist(strsplit(files,"\\.bam")))
       bambedObj <- CODEX2::getbambed(bamdir = files,
                                      bedFile = bedFile,
                                      sampname = sampname,
                                      projectname = "projectname"
-                                     #chr
       )
       ref <- bambedObj$ref
 
-      ######################################################################
-      # Getting GC content and mappability
-      ######################################################################
+      ## Get GC content and mappability----
       gc <- getgc(ref)
       mapp <- getmapp(ref)
 
-      ######################################################################
-      # Getting gene names, needed for targeted sequencing
-      ######################################################################
+      #Getting gene names, needed for targeted sequencing
       gene <- read.csv2(bedFile, sep="\t", header = F)$V4
       values(ref) <- cbind(values(ref), DataFrame(gc, mapp, gene))
 
-      ######################################################################
-      # Getting depth of coverage
-      ######################################################################
+      ## Get depth of coverage----
       coverageObj <- getcoverage(bambedObj, mapqthres = 20)
       Y <- coverageObj$Y
-      #write.csv(Y, file = paste(projectname, '_coverage.csv', sep=''), quote = FALSE)
-      #head(Y[,1:5])
-
-      ######################################################################
-      # Quality control
-      ######################################################################
+      
+      ## Quality control----
+      
       qcObj <- qc(Y, sampname, ref, cov_thresh = c(20, Inf),
                   length_thresh = c(20, Inf), mapp_thresh = 0.9,
                   gc_thresh = c(20, 80))
@@ -230,19 +223,14 @@ for (name in names(datasets)) {
       Y_qc <- qcObj$Y_qc; sampname_qc <- qcObj$sampname_qc
       ref_qc <- qcObj$ref_qc; qcmat <- qcObj$qcmat; gc_qc <- ref_qc$gc
 
-      ##########################################################
-      # Estimating library size factor for each sample
-      ##########################################################
+      
+      ## Estimating library size factor for each sample----
       Y.nonzero <- Y_qc[apply(Y_qc, 1, function(x){!any(x==0)}),]
-      #pseudo.sample <- apply(Y.nonzero,1,function(x){prod(x)^(1/length(x))})
       pseudo.sample <- apply(Y.nonzero,1,function(x){exp(1/length(x)*sum(log(x)))})
       N <- apply(apply(Y.nonzero, 2, function(x){x/pseudo.sample}), 2, median)
       #plot(N, apply(Y,2,sum), xlab='Estimated library size factor', ylab='Total sum of reads')
 
-
-      ##########################################################
-      # Genome-wide normalization using normalize_null
-      ##########################################################
+      ## Genome-wide normalization using normalize_null----
       # If there are negative control samples, use normalize_codex2_ns()
       # If there are negative control regions, use normalize_codex2_nr()
       normObj.null <- normalize_null(Y_qc = Y_qc,
@@ -252,52 +240,44 @@ for (name in names(datasets)) {
       AIC <- normObj.null$AIC; BIC <- normObj.null$BIC
       RSS <- normObj.null$RSS
 
-      ##########################################################
-      # CBS segmentation per gene: optinmal for targeted seq
-      ##########################################################
+      
+      ## CBS segmentation per gene: optinmal for targeted seq----
       #source('segment_targeted.R')
       # Available at: https://github.com/yuchaojiang/CODEX2/blob/master/targeted_sequencing/segment_targeted.R
-      optK=which.max(BIC)
-      finalcall=matrix(ncol=14,nrow=0)
+      optK = which.max(BIC)
+      finalcall = matrix(ncol = 14, nrow = 0)
       colnames(finalcall)=c('sample_name','chr','gene','cnv',
                             'st_bp','ed_bp','length_kb',
                             'st_exon','ed_exon','raw_cov',
                             'norm_cov','copy_no','lratio',
                             'mBIC')
+      
       for(genei in unique(ref_qc$gene)){
         cat('Segmenting gene',genei,'\n')
-        geneindex=which(ref_qc$gene==genei)
-        yi=Y_qc[geneindex,, drop=FALSE]
-        yhati=Yhat[[optK]][geneindex,, drop=FALSE]
-        refi=ref_qc[geneindex]
-        finalcalli=segment_targeted(yi, yhati, sampname_qc, refi, genei, lmax=length(geneindex), mode='fraction')
-        finalcall=rbind(finalcall,finalcalli)
+        geneindex = which(ref_qc$gene == genei)
+        yi = Y_qc[geneindex,, drop = FALSE]
+        yhati = Yhat[[optK]][geneindex,, drop=FALSE]
+        refi = ref_qc[geneindex]
+        finalcalli = segment_targeted(yi, yhati, sampname_qc, refi, genei, lmax=length(geneindex), mode='fraction')
+        finalcall = rbind(finalcall,finalcalli)
       }
-      #cn=(as.numeric(as.matrix(finalcall[,'copy_no'])))
-      #cn.filter=(cn<=1.7)|(cn>=2.3) # removing calls with fractional copy numbers close to 2 (for heterogeneous cancer samples)
-      #finalcall=finalcall[cn.filter,]
-      #length_exon=as.numeric(finalcall[,'ed_exon'])-as.numeric(finalcall[,'st_exon'])+1
-      #finalcall=cbind(finalcall[,1:7],length_exon,finalcall[,10:14])
-
-
-
+     
       cn <- (as.numeric(as.matrix(finalcall[,'copy_no'])))
       cn.filter <- (cn <= params$cn_del_factor) | (cn >= params$cn_dup_factor)
       finalcall <- finalcall[cn.filter,]
-      #length_exon <- as.numeric(finalcall[,'ed_exon']) - as.numeric(finalcall[,'st_exon']) + 1
-      #finalcall <- cbind(finalcall[,1:7], length_exon, finalcall[,10:14])
-
-      # set right sample name and cnv naming
+      
+      ## Set right sample name and cnv naming----
       for (i in 1:nrow(finalcall)){
         parts <- strsplit(finalcall[i, "sample_name"], "/")[[1]]
         finalcall[i, "sample_name"] <- parts[length(parts)]
         finalcall[i, "cnv"] <- auxCNname(finalcall[i, "cnv"])
       }
 
-      # save results
+      # Save results----
+      ##CSV file----
       write.table(finalcall, file = file.path(outputFolder, "cnvFounds.csv"), sep='\t', quote=F, row.names=F)
 
-      # Save results in GRanges format
+      ##GRanges format----
       message("Saving CNV GenomicRanges")
       saveResultsFileToGR(outputFolder, "cnvFounds.csv",
                           geneColumn = "gene",
@@ -309,12 +289,12 @@ for (name in names(datasets)) {
 
       print(paste("CODEX2 for", name, "dataset finished", sep=" "))
       cat("\n\n\n")
-
+      ##Temporary files----
       #Delete temporary files if specified
       if(includeTempFiles == "false"){
         filesAll <- list.files(outputFolder, full.names = TRUE)
         filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-        filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+        filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
         do.call(unlink, filesToRemove)
       }
     }
