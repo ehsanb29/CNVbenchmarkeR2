@@ -5,8 +5,8 @@ suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 library(dplyr)
 
-
-# Read args
+#Get parameters----
+## Read args ----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
@@ -19,15 +19,15 @@ if(length(args)>0) {
   includeTempFiles <- "true"
 }
 
-#Load the parameters file
+##Load the parameters files----
 params <- yaml.load_file(clearCNVParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
-#get clearCNV folder
+##Get clearCNV folder----
 clearCNVFolder <- file.path(params$clearCNVFolder)
 
-
+# Dataset iteration ----
 # go over datasets and run clearCNV for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
@@ -48,17 +48,16 @@ for (name in names(datasets)) {
     }
     unlink(outputFolder, recursive = TRUE);
     dir.create(outputFolder, showWarnings = FALSE)
-
-    # Get bam files
+    ## Input files for clearCNV ----
+    ### Get bam files
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
-
     ## Create bam directory and merge all bams in a txt file
     dir.create(file.path(outputFolder, "bams"))
     bamTxt <- file.path(outputFolder, paste0("bams/all_bams.txt"))
-    write.table(x = paste(bamFiles, sep="\n"), file = bamTxt , quote = FALSE, row.names = FALSE, col.names=FALSE)
+    write.table(x = paste(bamFiles, sep = "\n"), file = bamTxt , quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 
-    # Call germline CNV caller
+    #Run clearCNV----
     cmd <- paste(".", clearCNVFolder, "\n",
                  #"srun",
                  "clearCNV",
@@ -87,22 +86,23 @@ for (name in names(datasets)) {
       dplyr::mutate(CNV.type = ifelse(aberration == "DEL",
                                       "deletion",
                                       "duplication"))
-    write.table(resDF, file.path(outputFolder, "cnv_calls.tsv"), sep="\t", quote=F, row.names = FALSE, col.names = TRUE)
+    write.table(resDF, file.path(outputFolder, "cnv_calls.tsv"), sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
 
     # Save results----
     # Path to  tsv file
     finalSummaryFile <- file.path(outputFolder, "cnv_calls.tsv")
-    # Save results in a GenomicRanges object
+    ## GenomicRanges object ----
     message("Saving CNV GenomicRanges results")
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "gene",
                         sampleColumn = "sample", chrColumn = "chr", startColumn = "start",
                         endColumn = "end", cnvTypeColumn = "CNV.type")
-
+    
+    ## Temporary files----
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
 
