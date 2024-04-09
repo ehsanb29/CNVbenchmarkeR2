@@ -6,7 +6,8 @@ source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/uti
 library(dplyr)
 library(stringr)
 
-# Read args
+#Get parameters----
+## Read args----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
@@ -19,15 +20,15 @@ if(length(args)>0) {
   includeTempFiles <- "true"
 }
 
-#Load the parameters file
+## Load the parameters file----
 params <- yaml.load_file(cobaltParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
-#Get cobalt folder
+##Get cobalt folder----
 cobaltFolder <- file.path(params$cobaltFolder)
 
-
+# Dataset iteration ----
 # go over datasets and run cobalt for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
@@ -39,7 +40,6 @@ for (name in names(datasets)) {
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
 
-
     # Create output folder
     if (!is.null(params$outputFolder)) {
       outputFolder <- params$outputFolder
@@ -49,13 +49,12 @@ for (name in names(datasets)) {
     unlink(outputFolder, recursive = TRUE); #delete the folder if exists
     dir.create(outputFolder, showWarnings = FALSE) #create the folder
 
-
     # Read bamfiles and sample names
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     samplesName <- list.files(bamsDir, pattern = '*.bam$', full.names = FALSE) %>%
       stringr::str_replace_all( ".bam$", "")
-
-    ## Create a coverage directory and coverage count for all samples----
+    ## Run cobalt----
+    ### Create a coverage directory and coverage count for all samples----
     dir.create(file.path(outputFolder, "coverage"), showWarnings = FALSE)
     allCov <- file.path(outputFolder, "coverage/samples_coverages.bed")
     cmd <- paste( ".", cobaltFolder, "\n",
@@ -70,7 +69,7 @@ for (name in names(datasets)) {
 
 
     # Read all samples coverage file created in the last step
-    allCovFile <- read.csv2(allCov, sep="\t")
+    allCovFile <- read.csv2(allCov, sep = "\t")
 
     #Create a dataframe to store Cobalt results
     cnvData <- data.frame()
@@ -78,7 +77,7 @@ for (name in names(datasets)) {
     # Go over each bam in bamFiles
     for (i in seq_len(length(bamFiles))){
 
-      ## Training ----
+      ### Training ----
       #Extract the coverages of all the samples except the one of interest  and store the results in a bed file
       trainingSamples <- bamFiles[-i]
       trainingSamplesName <-  samplesName[-i]
@@ -87,13 +86,9 @@ for (name in names(datasets)) {
         dplyr::select( "X.chrom" , "start", "end", contains(trainingSamplesName)) %>%
         dplyr::rename("#chrom" = X.chrom)
       trainingCov <- file.path(outputFolder, paste0("coverage/training_", samplesName[i], "_coverages.bed"))
-      write.table(x = covFile,
-                  file = trainingCov,
-                  sep="\t",
-                  quote=FALSE,
-                  row.names = FALSE)
+      write.table(x = covFile, file = trainingCov, sep = "\t", quote = FALSE, row.names = FALSE)
 
-      # Create training directory
+      # Create training director
       dir.create(file.path(outputFolder, "training"), showWarnings = FALSE)
 
       # Build the model with all the samples except the one of interest
@@ -113,7 +108,7 @@ for (name in names(datasets)) {
       print(cmd); system(cmd);
 
 
-      ## Testing----
+      ### Testing----
 
       # Create new test directories
       dir.create(file.path(outputFolder, "test"), showWarnings = FALSE)
@@ -125,11 +120,7 @@ for (name in names(datasets)) {
         dplyr::select( "X.chrom" , "start", "end", contains(samplesName[i])) %>%
         dplyr::rename("#chrom" = X.chrom)
       testCov <- file.path(outputFolder, paste0("test/coverages/", samplesName[i], "_coverages.bed"))
-      write.table(x = sampleCovFile,
-                  file = testCov,
-                  sep="\t",
-                  quote=FALSE,
-                  row.names = FALSE)
+      write.table(x = sampleCovFile, file = testCov, sep = "\t", quote = FALSE, row.names = FALSE)
 
       # Execute the model with a bed output format
       testResults <- file.path(outputFolder, paste0("test/results/test", samplesName[i], "_results.bed"))
@@ -139,7 +130,6 @@ for (name in names(datasets)) {
                    "-d", testCov,
                    "-o", testResults)
       print(cmd); system(cmd);
-
 
       # Merge results of all samples in cnvData----
       testResultDf<- read.csv2(testResults, sep = "\t")
@@ -195,16 +185,18 @@ for (name in names(datasets)) {
                                       "duplication"))
 
     # Save results----
+    ##TSV file----
     # Print results in a tsv file
     finalSummaryFile <- file.path(outputFolder, "cnvs_summary.tsv")
     write.table(resGenes, finalSummaryFile, sep = "\t", quote = F, row.names = F)
 
-    # Save results in a GenomicRanges object
+    ##GenomicRanges object----
     message("Saving CNV GenomicRanges results")
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "name",
                         sampleColumn = "Sample", chrColumn = "seqnames", startColumn = "start_gene",
                         endColumn = "end_gene", cnvTypeColumn = "CNV.type")
 
+    ##Temporary files----
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
@@ -212,6 +204,9 @@ for (name in names(datasets)) {
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
       do.call(unlink, filesToRemove)
     }
-
   }
 }
+
+print(paste("Finishing at", endTime <- Sys.time()))
+cat("\nElapsed time:")
+print(endTime - startTime)
