@@ -9,7 +9,6 @@ library(tidyr)
 library(stringr)
 
 #Get parameters----
-
 ## Read args----
 args <- commandArgs(TRUE)
 print(args)
