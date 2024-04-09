@@ -5,9 +5,9 @@ print(getwd())
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 
+#Functions----
 # Saves csv file with all failed exons (in a common format)
 saveExonFailures <- function(deconFailuresFile, bedFile, bamsFolder, outputFolder){
-
   # load input data
   listOfsamples <- sub(".bam.bai", "", list.files(bamsFolder, pattern = "*.bai"))
   outputFile <- file.path(outputFolder, "failedROIs.csv")
@@ -47,8 +47,8 @@ saveExonFailures <- function(deconFailuresFile, bedFile, bamsFolder, outputFolde
 }
 
 
-
-# Read args
+#Get parameters----
+## Read args----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
@@ -61,7 +61,7 @@ if(length(args)>0) {
   includeTempFiles <- "true"
 }
 
-#Load the parameters file
+## Load the parameters file----
 deconParams <- yaml.load_file(deconParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(deconParams)))
@@ -72,6 +72,7 @@ deconFolder <- file.path(deconParams$deconFolder)
 # Set decon as working directory. Necessary to make decon packrat work
 currentFolder <- getwd()
 
+# Dataset iteration ----
 # go over datasets and run decon for those which are active
 for (name in names(datasets)) {
   setwd(deconFolder)
@@ -95,14 +96,13 @@ for (name in names(datasets)) {
       dir.create(outputFolder)
     }
 
-    print(outputFolder)
     # build input/output file paths
     ouputBams <- file.path(outputFolder, "output.bams")
     ouputRData <- file.path(outputFolder, "output.bams.RData")
     failuresFile <- file.path(outputFolder, "failures");
     calls <- file.path(outputFolder, "calls");
 
-    # Do pre-calc part of the algorithm
+    ## Do pre-calc part of the algorithm----
     if (is.null(deconParams$execution) || deconParams$execution != "skipPrecalcPhase") {
       cmd <- paste("Rscript", "ReadInBams.R", "--bams", bamsDir, "--bed", bedFile, "--fasta", fastaFile, "--out", ouputBams)
       print(cmd); system(cmd)
@@ -121,20 +121,21 @@ for (name in names(datasets)) {
     }
 
 
-    # Call part 2
+    ## Call part 2----
     cmd <- paste("Rscript", "IdentifyFailures.R", "--RData", ouputRData, "--mincorr", deconParams$mincorr,
                  "--mincov", deconParams$mincov,  "--out", failuresFile)
     print(cmd); system(cmd)
     print("IdentifyFailures.R finished");
 
 
-    # Call part 3
+    ## Call part 3----
     cmd <- paste("Rscript makeCNVcalls.R", "--RData", ouputRData, "--transProb",  deconParams$transProb, "--plot None",
                  "--out", calls)
     print(cmd); system(cmd)
     print("makeCNVcalls.R finished");
 
-    # Save results in GRanges format
+    # Save results----
+    ##GenomicRanges object----
     message("Saving CNV GenomicRanges and Failures results")
     #return to main folder
     setwd(currentFolder)
@@ -144,16 +145,14 @@ for (name in names(datasets)) {
     print(paste("DECoN for", name, "dataset finished", sep=" "))
     cat("\n\n\n")
 
-
+    ##Temporary files----
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
-
-
   }
 }
 
