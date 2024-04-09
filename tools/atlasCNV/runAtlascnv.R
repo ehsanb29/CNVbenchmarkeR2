@@ -144,7 +144,8 @@ for (name in names(datasets)) {
                                 " --threshold_dup ", params$threshold_dup)
 
     print(cmd_run_atlascnv);system(cmd_run_atlascnv);
-
+    # Save results----
+    ##TSV file----
     #merge cnv output files and modify columns
     resDF <- list.files(name, pattern = "\\.cnv", recursive = TRUE, full.names = TRUE)  %>%
       purrr::set_names(basename) %>%
@@ -162,7 +163,7 @@ for (name in names(datasets)) {
     # Read output file, add CNV.type column and write the results in a tsv file
     write.table(resDF, file.path(outputFolder, "cnv_calls.tsv"), sep="\t", quote=F, row.names = FALSE, col.names = TRUE)
 
-    # Save results----
+
     # Path to  tsv file
     finalSummaryFile <- file.path(outputFolder, "cnv_calls.tsv")
     ## GenomicRanges object ----
@@ -179,8 +180,6 @@ for (name in names(datasets)) {
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
-
-
   }
 #return to the original folder
   setwd("../..")
