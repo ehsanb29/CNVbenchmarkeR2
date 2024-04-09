@@ -1,5 +1,5 @@
 # Runs Atlas-CNV over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runAtlasCNV.R [atlasCNVparams_file] [datasets_params_file] [include_temp_files]
+#USAGE: Rscript runAtlasCNV.R [atlasCNVparams_file] [datasets_params_file] [include_temp_files] [evaluate_parameters]
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -20,25 +20,23 @@ if(length(args)>0) {
   paramsFile <- "params.yaml"
   datasetsParamsFile <- "../../datasets.yaml"
   includeTempFiles <- "true"
+  evaluateParameters <- "false"
 }
 
-#Load the parameters file  ----
+# Load the parameters file  ----
 params <- yaml.load_file(paramsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
-
 
 # print params
 print(paste("Params for this execution:", list(params)))
 print(paste("Datasets for this execution:", list(datasets)))
 
-
 # Get AtlasCNV folder ----
 atlascnvFolder <- file.path(params$atlascnvFolder)
 
-#locate the reference 
+# Locate the reference----
 gatkFolder <- file.path(params$gatkFolder)
 currentFolder <- getwd()
-
 
 
 # Dataset iteration ----
@@ -47,7 +45,6 @@ for (name in names(datasets)) {
   dataset <- datasets[[name]]
   if (dataset$include){
     print(paste("Starting Atlas-CNV for", name, "dataset", sep=" "))
-
 
     # Create output folder
     if (!is.null(params$outputFolder)) {
@@ -61,81 +58,81 @@ for (name in names(datasets)) {
     dir.create(outputFolder, showWarnings = FALSE)
 
     # extract fields
-
     bamsDir <- file.path(dataset$bams_dir)
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
     
-    # Input files for Atlas-CNV ----
+    ## Input files for Atlas-CNV ----
 
-    ## Panel file ----
+    ### Panel file ----
     #create panel file to input in Atlas
-    ##
     tempBed<-read.csv(bedFile, sep="\t", header = FALSE)
 
-    panel<-tempBed %>%
-      arrange(V1) %>%
-      mutate(Exon_Target = paste0(V1,":", V2%>% as.numeric() +1,"-", V3))  %>%
-      mutate(Gene_Exon=V4) %>%
-      mutate(Call_CNV = ifelse(grepl("^Y", Exon_Target), "N", "Y"))%>%
-      mutate(RefSeq=V4) %>%
-      select(-starts_with("V"))
-    panel$Gene_Exon<-ave(panel$Gene_Exon, panel$Gene_Exon, FUN = function(i) paste0(i, '_', seq_along(i)))
+    panel <- tempBed %>%
+      dplyr::arrange(V1) %>%
+      dplyr::mutate(Exon_Target = paste0(V1,":", V2%>% as.numeric() +1,"-", V3))  %>%
+      dplyr::mutate(Gene_Exon = V4) %>%
+      dplyr::mutate(Call_CNV = ifelse(grepl("^Y", Exon_Target), "N", "Y")) %>%
+      dplyr::mutate(RefSeq = V4) %>%
+      dplyr::select(-starts_with("V"))
+    panel$Gene_Exon <- ave(panel$Gene_Exon, panel$Gene_Exon, FUN = function(i) paste0(i, '_', seq_along(i)))
+    
     #export panel file
-    write.table(panel, file=paste0(outputFolder,'/panel',name,'.txt'),sep="\t", col.names=T, row.names=FALSE,quote=FALSE)
+    write.table(panel, file = paste0(outputFolder,'/panel',name,'.txt'),sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
 
-    ## Sample file ----
+    ### Sample file ----
 
-    tempSample<-as.data.frame(sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(bamFiles)))
-    sample<-tempSample %>%
-      mutate(sex="F") %>%
-      mutate(mp=name)
+    tempSample <- as.data.frame(sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(bamFiles)))
+    sample <- tempSample %>%
+      dplyr::mutate(sex = "F") %>%
+      dplyr::mutate(mp = name)
+    
     #export sample file
-    write.table(sample, file=paste0(outputFolder,'/',name,'.sample'),sep="\t", col.names=F, row.names=FALSE,quote=FALSE)
+    write.table(sample, file = paste0(outputFolder,'/', name, '.sample'), sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
     #Remove intermediate files
     rm(tempSample, tempBed)
-
+    
+    ### Depth of Coverage----
     #create Depth of coverage folder (DOC)
-    depthCoverageFolder <- ifelse(evaluateParameters=="false",
+    depthCoverageFolder <- ifelse(evaluateParameters == "false",
                                   file.path(outputFolder, "DepthOfCoverage"),
                                   paste0(currentFolder, "/evaluate_parameters/atlasCNV/", name, "/DepthOfCoverage"))
 
-  #Check if DOC folder exists to skip this step
+    #Check if DOC folder exists to skip this step
     if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder))<7){
     #if it doesn't exist it calculates DOC
     dir.create(depthCoverageFolder, showWarnings = FALSE)
 
     #get depth of coverage for each BAM file, using GATK
     for (bam in bamFiles){
-      bam <- basename(bamFiles) %>% tools::file_path_sans_ext()
+      bam <- basename(bamFiles) %>% 
+        tools::file_path_sans_ext()
       for (i in seq_len(length(bamFiles))){
         cmd <- paste(file.path(gatkFolder, "gatk"),  "DepthOfCoverage",
                      "-R",  fastaFile,
                      "-I", bamFiles[i],
-                     "-O",  file.path(depthCoverageFolder,paste0(bam[i], ".DATA")),
+                     "-O",  file.path(depthCoverageFolder, paste0(bam[i], ".DATA")),
                      "--output-format", "TABLE",
                      "-L", bedFile)
         print(cmd);system(cmd)
+        }
       }
     }
-  }
-
+    
+    ##Run atlasCNV----
     print("run atlasCNV")
-
     setwd(outputFolder)
 
     #create configuration file
     ##atlasCNV configuration file for Linux users
-    cfg <- data.frame(V1=paste0("GATKDIR=", depthCoverageFolder, "/[SAMPLE_FCLBC].DATA.sample_interval_summary"))%>%
-      dplyr::add_row(V1=paste0("ATLASCNV=", params$atlascnvFolder)) %>%
-      dplyr::add_row(V1=paste0("RPATH=", params$rpath)) %>%
-      dplyr::add_row(V1=paste0("RSCRIPT=", params$Rscript))
+    cfg <- data.frame(V1 = paste0("GATKDIR=", depthCoverageFolder, "/[SAMPLE_FCLBC].DATA.sample_interval_summary")) %>%
+      dplyr::add_row(V1 = paste0("ATLASCNV=", params$atlascnvFolder)) %>%
+      dplyr::add_row(V1 = paste0("RPATH=", params$rpath)) %>%
+      dplyr::add_row(V1 = paste0("RSCRIPT=", params$Rscript))
 
     write.table(cfg, paste0(outputFolder,"/config"), col.names = FALSE, row.names = FALSE, quote = FALSE)
 
-
-    # Run Atlas-CNV ----
 
     cmd_run_atlascnv <- paste0( "perl ",atlascnvFolder,"/atlas_cnv.pl",
                                 " --config ", outputFolder,"/config",
@@ -147,13 +144,15 @@ for (name in names(datasets)) {
     print(cmd_run_atlascnv);system(cmd_run_atlascnv);
 
     #merge cnv output files and modify columns
-
     resDF <- list.files(name, pattern = "\\.cnv", recursive = TRUE, full.names = TRUE)  %>%
       purrr::set_names(basename) %>%
-      purrr::map(read.delim) %>% rlist::list.rbind() %>% as.data.frame() %>%
-      tibble::rownames_to_column(var="sample") %>% dplyr::mutate(sample= stringr::str_replace_all(sample, ".cnv.FAILED_sampleQC_and_sampleANOVA.[0-9]+|.cnv.FAILED_sampleANOVA.[0-9]+|.cnv..FAILED_sampleQC.[0-9]+|.cnv.FAILED_sampleQC.[0-9]|.cnv.FAILED_sampleANOVA|.cnv.[0-9]+|.cnv","")) %>%
+      purrr::map(read.delim) %>% 
+      rlist::list.rbind() %>% 
+      as.data.frame() %>%
+      tibble::rownames_to_column(var = "sample") %>% 
+      dplyr::mutate(sample = stringr::str_replace_all(sample, ".cnv.FAILED_sampleQC_and_sampleANOVA.[0-9]+|.cnv.FAILED_sampleANOVA.[0-9]+|.cnv..FAILED_sampleQC.[0-9]+|.cnv.FAILED_sampleQC.[0-9]|.cnv.FAILED_sampleANOVA|.cnv.[0-9]+|.cnv","")) %>%
       dplyr::rename( "gene" = "Gene_Exon") %>%
-      tidyr::separate(Exon_Target, c("chr", "start","end"))%>%
+      tidyr::separate(Exon_Target, c("chr", "start","end")) %>%
       dplyr::mutate(CNV.type = ifelse(cnv == "del",
                                       "deletion",
                                       "duplication"))
@@ -164,17 +163,18 @@ for (name in names(datasets)) {
     # Save results----
     # Path to  tsv file
     finalSummaryFile <- file.path(outputFolder, "cnv_calls.tsv")
-    # Save results in a GenomicRanges object
+    ## GenomicRanges object ----
     message("Saving CNV GenomicRanges results")
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "gene",
                         sampleColumn = "sample", chrColumn = "chr", startColumn = "start",
                         endColumn = "end", cnvTypeColumn = "CNV.type")
 
+    ## Temporary files----
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
-      filesAll <- list.files(outputFolder, full.names = TRUE, recursive=TRUE)
+      filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
       filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
 
