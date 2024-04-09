@@ -8,7 +8,9 @@ library(purrr)
 library(tidyr)
 library(stringr)
 
-# Read args ----
+#Get parameters----
+
+## Read args----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
@@ -23,7 +25,7 @@ if(length(args)>0) {
   evaluateParameters <- "false"
 }
 
-# Load the parameters file  ----
+## Load the parameters file----
 params <- yaml.load_file(paramsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 
@@ -31,10 +33,10 @@ datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 print(paste("Datasets for this execution:", list(datasets)))
 
-# Get AtlasCNV folder ----
+## Get AtlasCNV folder ----
 atlascnvFolder <- file.path(params$atlascnvFolder)
 
-# Locate the reference----
+## Locate the reference ----
 gatkFolder <- file.path(params$gatkFolder)
 currentFolder <- getwd()
 
@@ -174,7 +176,7 @@ for (name in names(datasets)) {
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
       filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value = TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
 
