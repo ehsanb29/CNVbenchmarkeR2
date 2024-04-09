@@ -4,7 +4,8 @@ print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 
-# Read args
+#Get parameters----
+## Read args ----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
@@ -18,23 +19,24 @@ if(length(args)>0) {
 }
 
 
-#Load the parameters file
+##Load the parameters files----
 params <- yaml.load_file(clincnvParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 
-#get folders and environment names
+##Get folders and environment names----
 condaFolder <-file.path(params$condaFolder)
 environmentName <- file.path(params$environmentName)
 ngsbitsFolder <- file.path(params$ngsbitsFolder)# get ngsbits folder
 clincnvFolder <- file.path(params$clincnvFolder)# get clincnv folder
 currentFolder <- getwd() #get current folder
 
-# run clincnv on selected datasets
+# Dataset iteration ----
+# go over datasets and run clinCNV for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
   if (dataset$include){
-    print(paste("Starting ClinCNV for", name, "dataset", sep=" "))
+    print(paste("Starting ClinCNV for", name, "dataset", sep = " "))
 
     # Create output folder
     if (!is.null(params$outputFolder)) {
@@ -43,14 +45,14 @@ for (name in names(datasets)) {
     } else{
       outputFolder <- file.path(getwd(), "output", paste0("clincnv-", name))
     }
-   unlink(outputFolder, recursive = TRUE);
-   dir.create(outputFolder)
+    unlink(outputFolder, recursive = TRUE);
+    dir.create(outputFolder)
 
     # create folders to be used later
     ontargetFolder <- file.path(outputFolder, "ontargetCov")
     dir.create(ontargetFolder)
-
-    # 1: Calculate on-target coverage for each sample
+    ##Run ClinCNV ----
+    ## 1: Calculate on-target coverage for each sample----
     bamFiles <- list.files(dataset$bams_dir, "*.bam$")
     for (f in bamFiles){
       fullBamFile <- file.path(dataset$bams_dir, f)
@@ -69,19 +71,19 @@ for (name in names(datasets)) {
       system(cmd)
     }
 
-    # 2: Merge coverage files into one table
-    covFiles <- list.files(ontargetFolder, "*.cov$", full.names = T)
-    covData <- read.table(covFiles[1], stringsAsFactors = F)[,c(1:3)]
+    ## 2: Merge coverage files into one table----
+    covFiles <- list.files(ontargetFolder, "*.cov$", full.names = TRUE)
+    covData <- read.table(covFiles[1], stringsAsFactors = FALSE)[,c(1:3)]
     names(covData) <- c("chr", "start", "end")
     coverageFile <- file.path(outputFolder, "coverage.cov")
     for (f in covFiles){
       sampleName <- tools::file_path_sans_ext(basename(f))
-      covData[sampleName] <-  read.table(f, stringsAsFactors = F)[4]
+      covData[sampleName] <-  read.table(f, stringsAsFactors = FALSE)[4]
     }
-    write.table(covData, coverageFile, sep = "\t", row.names = F, quote = F)
+    write.table(covData, coverageFile, sep = "\t", row.names = FALSE, quote = FALSE)
 
 
-    # 3: Call germline CNVs
+    ## 3: Call germline CNVs----
     # --lengthG has to be 0 since we expect to find CNVs with at least one region
     # --maxNumGermCNVs: 20  # maximum number of allowed germline CNVs per sample. Default value is 10000, but we chose smaller value for gene panel following author's advice
     cmd <- paste("Rscript", file.path(params$clincnvFolder, "clinCNV.R"),
@@ -92,15 +94,15 @@ for (name in names(datasets)) {
     print(cmd);system(cmd)
 
 
-    # 4: Summarize results into one file
-    cnvFiles <- list.files(file.path(outputFolder, "normal"), "*_cnvs.tsv$", full.names = T, recursive = T)
+    ## 4: Summarize results into one file----
+    cnvFiles <- list.files(file.path(outputFolder, "normal"), "*_cnvs.tsv$", full.names = TRUE, recursive = TRUE)
     cnvData <- data.frame()
     for ( f in cnvFiles){
       nLines <- length(readLines(f))
       if (nLines > 9){
         sampleName <- tools::file_path_sans_ext(basename(f))
         sampleName <- strsplit(sampleName, "_cnvs")[[1]][1]
-        fData <- read.table(f, stringsAsFactors = F, skip = 9)
+        fData <- read.table(f, stringsAsFactors = FALSE, skip = 9)
         fData$Sample <- sampleName
         cnvData <- rbind(cnvData, fData)
       }
@@ -134,9 +136,9 @@ for (name in names(datasets)) {
 
     # Write final CNV results file
     finalSummaryFile <- file.path(outputFolder, "cnvs_summary.tsv")
-    write.table(cnvDataMultiGene, finalSummaryFile, sep = "\t", quote = F, row.names = F)
-
-    # Save results in GRanges format
+    write.table(cnvDataMultiGene, finalSummaryFile, sep = "\t", quote = FALSE, row.names = FALSE)
+    # Save results----
+    ## GenomicRanges object ----
     message("Saving CNV GenomicRanges results")
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "genes",
                         sampleColumn = "Sample", chrColumn = "chr", startColumn = "start",
@@ -144,12 +146,13 @@ for (name in names(datasets)) {
 
     print(paste("ClinCNV for", name, "dataset finished", sep=" "))
     cat("\n\n\n")
-
+    
+    ## Temporary files----
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
       filesToKeep <- c("failedRois.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
   }
