@@ -1,5 +1,6 @@
 # Runs Cobalt over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runCobalt.R [cobalt_params_file] [datasets_params_file] [include_temp_files]
+#USAGE: Rscript runCobalt.R [cobalt_params_file] [datasets_params_file] [keepTempFiles]
+# keepTempFiles: if true, temp files will not be removed (Default: true)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -13,11 +14,11 @@ print(args)
 if(length(args)>0) {
   cobaltParamsFile <- args[1]
   datasetsParamsFile <- args[2]
-  includeTempFiles <- args[3]
+  keepTempFiles <- args[3]
 } else {
   cobaltParamsFile <- "tools/cobalt/cobaltParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
-  includeTempFiles <- "true"
+  keepTempFiles <- "true"
 }
 
 ## Load the parameters file----
@@ -198,10 +199,10 @@ for (name in names(datasets)) {
 
     ##Temporary files----
     #Delete temporary files if specified
-    if(includeTempFiles == "false"){
+    if(keepTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
   }
