@@ -9,14 +9,15 @@ source("utils/utils.r") # Load utils functions
 source("tools/germlineCNVcaller/germlineCNVcallerUtils.r") # Load GATK wrap functions
 library(dplyr)
 
-# Read args ----
+#Get parameters----
+## Read args----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
   paramsFile <- args[1]
   datasetsParamsFile <- args[2]
   keepTempFiles <- args[3]
-  skipPrecalcPhase <- args[4]  
+  skipPrecalcPhase <- args[4]
 } else {
   paramsFile <- "params.yaml"
   datasetsParamsFile <- "../../datasets.yaml"
@@ -24,7 +25,7 @@ if(length(args)>0) {
   skipPrecalcPhase <- "false"
 }
 
-# Load the parameters file
+## Load the parameters file----
 params <- yaml.load_file(paramsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 
@@ -32,7 +33,7 @@ datasets <- yaml.load_file(datasetsParamsFile)
 print(paste("Params for this execution:", list(params)))
 print(paste("Datasets for this execution:", list(datasets)))
 
-# Load paths
+## Load paths----
 picard <- params$picard
 gatk <- params$gatk
 currentFolder <- getwd()
@@ -41,16 +42,12 @@ contigFile <- file.path(currentFolder, "tools/germlineCNVcaller/contig-ploidy-pr
 
 
 # Dataset iteration ----
-
 # go over datasets and run germlineCNVcaller
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
-  
-  if (dataset$include){
-    
-    print(paste("Starting GermlineCNVcaller for", name, "dataset", sep=" "))
 
-   
+  if (dataset$include){
+    print(paste("Starting GermlineCNVcaller for", name, "dataset", sep=" "))
     # check if outputfolder exists
     if (!is.null(params$outputFolder)) {
       if(stringr::str_detect(params$outputFolder, "^./")) params$outputFolder <- stringr::str_sub(params$outputFolder, 3, stringr::str_length(params$outputFolder))
@@ -68,29 +65,29 @@ for (name in names(datasets)) {
     fastaFile <- file.path(dataset$fasta_file)
     fastaDict <- file.path(dataset$fasta_dict)
 
-    
-    # Create Interval list ----
+
+    ## Create Interval list ----
     interval_list <- ifelse(skipPrecalcPhase == "false",
                             paste0(outputFolder,"/list.interval_list"),
                             paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/list.interval_list"))
     createIntervalList(picard, bedFile, interval_list, fastaDict)
 
-    
-    # GATK: Preprocess intervals ----
+
+    ## GATK: Preprocess intervals ----
     preprocessInterval_list <- ifelse(skipPrecalcPhase=="false",
                                       paste0(outputFolder,"/preprocessed_intervals.interval_list"),
                                       paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/preprocessed_intervals.interval_list"))
     preprocessIntervals(gatk, fastaFile, outputFolder, interval_list, preprocessInterval_list)
-    
-    
-    # GATK: Annotate intervals----  
+
+
+    ## GATK: Annotate intervals----
     annotatedIntervals_list <- ifelse(skipPrecalcPhase == "false",
                                       paste0(outputFolder,"/annotated_intervals.interval_list"),
                                       paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/annotated_intervals.interval_list"))
     annotateIntervals(gatk, fastaFile, outputFolder, preprocessInterval_list, annotatedIntervals_list)
-    
-    
-    # GATK: Collect read counts ----
+
+
+    ## GATK: Collect read counts ----
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     readCountsFolder <- ifelse(skipPrecalcPhase == "false",
                                   file.path(outputFolder, "ReadCounts"),
@@ -99,34 +96,34 @@ for (name in names(datasets)) {
       collectReadCounts(gatk, bamFiles, outputFolder, preprocessInterval_list, readCountsFolder)
     }
 
-    
+
     #merge all hdf5 files for running DetermineGermlineContigPloidy
     hdf5s <- list.files(readCountsFolder, pattern = '*.hdf5$', full.names = TRUE)
     all_hdf5_names<- paste(hdf5s, collapse=" -I ")
-    
-    # GATK: Filter intervals----  
+
+    ## GATK: Filter intervals----
     filteredIntervals_list <- ifelse(skipPrecalcPhase == "false",
                                      paste0(outputFolder,"/filtered_intervals.interval_list"),
                                      paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/IntervalList/filtered_intervals.interval_list"))
     filterIntervals(gatk, outputFolder, preprocessInterval_list, all_hdf5_names, annotatedIntervals_list, filteredIntervals_list)
-    
-    
-    #GATK: Determine contig ploidy ----
+
+
+    ##GATK: Determine contig ploidy ----
     contigPloidyDir <- ifelse(skipPrecalcPhase == "false",
                                file.path(outputFolder, "contigPloidy"),
                                paste0(currentFolder, "/evaluate_parameters/germlineCNVcaller/", name, "/preCalculated/contigPloidy"))
     determineContigPloidy(gatk, contigPloidyDir, bamsDir, outputFolder, contigFile, all_hdf5_names, filteredIntervals_list)
-    
-    
-    # #GATK: Run GermlineCNVcaller ----
+
+
+    ##GATK: Run GermlineCNVcaller ----
     cnvRaw <- file.path(paste0(outputFolder, "/cnvRaw"))
     if (!file.exists(cnvRaw)){
       dir.create(cnvRaw)
     } else {
       unlink(cnvRaw, recursive = TRUE)
-      dir.create(cnvRaw, recursive=TRUE)
+      dir.create(cnvRaw, recursive = TRUE)
     }
-    
+
     print(paste("Starting at", Sys.time(), "GermlineCNVCaller"))
     cmd_GermlineCNVCaller <-  paste("singularity exec -B", paste0(bamsDir, ",", outputFolder),
                                     gatk, 'gatk GermlineCNVCaller',
@@ -177,19 +174,19 @@ for (name in names(datasets)) {
 
     print(cmd_GermlineCNVCaller);system(cmd_GermlineCNVCaller);
 
-     
-    ##GATK: Run PostprocessingGermlineCNVcaller
+
+    ##GATK: Run PostprocessingGermlineCNVcaller----
     cnvProcessed <- file.path(paste0(outputFolder, "/cnvProcessed"))
     if (!file.exists(cnvProcessed)){
       dir.create(cnvProcessed)
     } else {
       unlink(cnvProcessed, recursive = TRUE)
-      dir.create(cnvProcessed, recursive=TRUE)
+      dir.create(cnvProcessed, recursive = TRUE)
     }
 
     callsRaw <- list.dirs(path=paste0(cnvRaw,"/cohort_run-calls"),  full.names = TRUE, recursive= FALSE)
     ploidyRaw <- list.dirs(path=paste0(contigPloidyDir,"/contig-calls"),  full.names = TRUE, recursive= FALSE)
-    
+
     print(paste("Starting at", Sys.time(), "Germline postProcess"))
     for (i in 1:length(callsRaw)){
       cmd_GermlineCNVCaller <- paste("singularity exec -B", paste0(bamsDir, ",", outputFolder),
@@ -205,9 +202,8 @@ for (name in names(datasets)) {
     }
 
 
-    # Save formatted results ----
-  
-  
+    # Save results ----
+    ##TXT file----
     # Put all results in the same file
     resultsFiles <- list.files(path=cnvProcessed, pattern="_genotyped_segments.vcf$", full.names = TRUE, recursive= TRUE)
     cnvData  <- data.frame()
@@ -222,28 +218,26 @@ for (name in names(datasets)) {
                      start = POS %>% as.integer(), end = END %>% as.integer())
      cnvData <- rbind(cnvData, cnvs_proc)
     }
-    
+
     outputFile <- file.path(outputFolder, "all_cnv_calls.txt")
-    write.table(cnvData, file = outputFile, sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
-    
-    # Save in Genomic Ranges format also
+    write.table(cnvData, file = outputFile, sep='\t', row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+    # GenomicRanges object----
     saveResultsFileToGR(outputFolder, "all_cnv_calls.txt", chrColumn = "CHROM", sampleColumn = "sample",
                        startColumn = "start", endColumn = "end", cnvTypeColumn = "copy_number")
-    
+
+    #Temporary files
     #Delete temporary files if specified
     if(keepTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
       foldersToRemove <- list.dirs(outputFolder, full.names = TRUE, recursive = FALSE)
       unlink(foldersToRemove, recursive = TRUE)
     }
-
   }
 }
-
-
 
 
 print(paste("Finishing at", endTime <- Sys.time()))
