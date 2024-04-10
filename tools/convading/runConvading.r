@@ -1,5 +1,6 @@
 # Runs CoNVaDING over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runConvading.R [convading_params_file] [datasets_params_file] [include_temp_files]
+#USAGE: Rscript runConvading.R [convading_params_file] [datasets_params_file] [keepTempFiles]
+# keepTempFiles: if true, temp files will not be removed (Default: true)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 suppressPackageStartupMessages(library(stringr))
@@ -65,11 +66,11 @@ print(args)
 if(length(args)>0) {
   convadingParamsFile <- args[1]
   datasetsParamsFile <- args[2]
-  includeTempFiles <- args[3]
+  keepTempFiles <- args[3]
 } else {
   convadingParamsFile <- "tools/convading/convadingParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
-  includeTempFiles <- "true"
+  keepTempFiles <- "true"
 }
 
 ##Load the parameters file----
@@ -223,10 +224,10 @@ for (name in names(datasets)) {
 
     print(paste("convading for", name, "dataset finished", sep=" "))
     cat("\n\n\n")
-    
+
     ##Temporary files----
     #Delete temporary files if specified
-    if(includeTempFiles == "false"){
+    if(keepTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
