@@ -1,5 +1,6 @@
 # Runs panelcn over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runpanelcn.R [panelcn_params_file] [datasets_params_file] [include_temp_files]
+#USAGE: Rscript runpanelcn.R [panelcn_params_file] [datasets_params_file] [keepTempFiles]
+# keepTempFiles: if true, temp files will not be removed (Default: true)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -7,33 +8,36 @@ suppressPackageStartupMessages(library(panelcn.mops))
 suppressPackageStartupMessages(library(plyr))
 suppressPackageStartupMessages(library(GenomicRanges))
 
+#Functions----
 # translates DEL/DUP into a common format
 auxCNname <- function(x) {
   if (x %in% c("CN0", "CN1")) return("deletion")
   else if (x %in% c("CN3", "CN4")) return("duplication")
 }
 
-# Read args
+#Get parameters----
+## Read args----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
   panelcnParamsFile <- args[1]
   datasetsParamsFile <- args[2]
-  includeTempFiles <- args[3]
+  keepTempFiles <- args[3]
 } else {
   panelcnParamsFile <- "tools/panelcnmops/panelcnmopsParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
-  includeTempFiles <- "true"
+  keepTempFiles <- "true"
 }
 
 
-#Load the parameters file
+##Load the parameters file----
 params <- yaml.load_file(panelcnParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 
 print(paste("Params for this execution:", list(params)))
+print(paste("Datasets for this execution:", list(datasets)))
 
-
+# Dataset iteration ----
 # go over datasets and run panelcn for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
@@ -63,7 +67,7 @@ for (name in names(datasets)) {
     }
     outputFile <- file.path(outputFolder, "cnvFounds.txt")
 
-    # Do pre-calc part of the algorithm
+    ##Do pre-calc part of the algorithm----
     if (is.null(params$execution) || params$execution != "skipPrecalcPhase") {
       # Get count windows
       countWindows <- getWindows(bedFile)
@@ -89,7 +93,7 @@ for (name in names(datasets)) {
       counts <- readRDS(file.path(params$precalcFolder, "counts.rds"))
     }
 
-    # extract params
+    ##Extract params----
     classes <- c(params$CN0, params$CN1, 1, params$CN3, params$CN4)
     normType <- params$normType
     sizeFactor <- params$sizeFactor
@@ -101,7 +105,7 @@ for (name in names(datasets)) {
     maxControls <- params$maxControls
     corrThresh  <- params$corrThresh
 
-    # Test samples depending on sample indications compatibility
+    ## Test samples depending on sample indications compatibility----
     allResults <- data.frame()
     allSampleNames <- names(mcols(counts))
     if (dataset$validated_results_file_format == "panelcn" && dataset$validated_results_file != ""
@@ -127,7 +131,7 @@ for (name in names(datasets)) {
           mcols(controlSamples) <- NULL # remove metadata columns
           mcols(controlSamples)[, controlSamplesNames] <- mcols(counts)[, controlSamplesNames] # add only control samples
 
-          # Run the algorithm
+          ## Run the algorithm
           XandCB <- testSamples
           elementMetadata(XandCB) <- cbind(elementMetadata(XandCB), elementMetadata(controlSamples))
           resultList <- runPanelcnMops(XandCB, 1:ncol(elementMetadata(testSamples)),countWindows = countWindows, I = classes, sizeFactor = sizeFactor, norm = norm,
@@ -146,11 +150,12 @@ for (name in names(datasets)) {
     } else {
       message("Clinical indication not found, using all samples potentially as controls")
 
-      # Run the algorithm
+      ## Run the algorithm----
       XandCB <- counts
       elementMetadata(XandCB) <- cbind(elementMetadata(XandCB), elementMetadata(XandCB))
       resultList <- runPanelcnMops(XandCB, 1:ncol(elementMetadata(counts)),countWindows = countWindows, I = classes, sizeFactor = sizeFactor, norm = norm,
                                    normType = normType, qu = qu, quSizeFactor = quSizeFactor, priorImpact = priorImpact, minMedianRC = minMedianRC, maxControls = maxControls, corrThresh = corrThresh)
+
 
       # Build results table
       sampleNames <- colnames(elementMetadata(counts))
@@ -159,33 +164,34 @@ for (name in names(datasets)) {
       allResults <- ldply(finalResultsTable, data.frame) # concat output from all samples
     }
 
-
-    # Build output file
+    #Save results----
+    ## Build output file----
     colNames <- c("Sample", "Gene", "Chr", "Start", "End", "lowQual", "CN")
     filteredResults <- allResults[(allResults$CN != "CN2") & (allResults$lowQual != "lowQual"),colNames] # only deletions/duplications (CN2 means normal), and high quality
     filteredResults$CNV.type <- lapply(filteredResults$CN, function(x) sapply(x, auxCNname)) # Add CNV.type column before storing file
     filteredResults$CNV.type <- as.factor(unlist(filteredResults$CNV.type))  # R things...
     write.table(filteredResults, outputFile, sep="\t", row.names=FALSE, quote = FALSE)  # write output file
 
-    # Save failed ROIs in a common format
+    ## Save failed ROIs in a common format----
     failedROIs <- allResults[allResults$lowQual == "lowQual", colNames] # get all low qual
     names(failedROIs)[1]<- "SampleID" # rename Sample column
     failedROIs <- failedROIs[,c(1,3,4,5,2)] # reorder and filter columns
     failedROIs[,1] <- unlist(strsplit(data.frame(lapply(failedROIs, as.character), stringsAsFactors=FALSE)[,1],"\\.bam"))  # remove .bam from sample names
     write.table(failedROIs, file.path(outputFolder, "failedROIs.csv"), sep="\t", row.names=FALSE, quote = FALSE) # save
 
-    # Save results in GRanges format
+    #GenomicRanges object
     message("Saving GenomicRanges results")
     saveResultsFileToGR(outputFolder, "cnvFounds.txt")
 
     print(paste("panelcn.mops for", name, "dataset finished", sep=" "))
     cat("\n\n\n")
 
+    #Temporary files----
     #Delete temporary files if specified
-    if(includeTempFiles == "false"){
+    if(keepTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
   }
