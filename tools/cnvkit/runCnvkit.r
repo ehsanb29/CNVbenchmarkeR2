@@ -1,5 +1,6 @@
 # Runs cnvkit over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runCnvkit.R [cnvkit_params_file] [datasets_params_file] [include_temp_files]
+#USAGE: Rscript runCnvkit.R [cnvkit_params_file] [datasets_params_file] [keepTempFiles]
+# keepTempFiles: if true, temp files will not be removed (Default: true)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -11,11 +12,11 @@ args <- commandArgs(TRUE)
 if(length(args)>0) {
   cnvkitParamsFile <- args[1]
   datasetsParamsFile <- args[2]
-  includeTempFiles <- args[3]
+  keepTempFiles <- args[3]
 } else {
   cnvkitParamsFile <- "tools/cnvkit/cnvkitParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
-  includeTempFiles <- "true"
+  keepTempFiles <- "true"
 }
 
 ##Load the parameters files----
@@ -66,7 +67,7 @@ for (name in names(datasets)) {
 
     print(cmd);system(cmd)
 
-    ###Autobin---- 
+    ###Autobin----
     #Quickly estimate read counts or depths in a BAM file to estimate reasonable on- and (if relevant) off-target bin sizes.
     cmd <- paste(".",
                  cnvkitFolder, "\n",
@@ -87,7 +88,7 @@ for (name in names(datasets)) {
     #create a folder to store calls files
     dir.create(file.path(outputFolder, "calls"))
 
-    
+
     for(i in seq_len(length(bamFiles))){
       #For each sample
       sampleName <- basename(tools::file_path_sans_ext(bamFiles))
@@ -208,8 +209,8 @@ for (name in names(datasets)) {
     cnvData  <- data.frame()
     for(s in sampleName){
       #read the call files and merge them
-      callFiles <- read.table(file.path(outputFolder, paste0("calls/", s, ".call.cns")), header = TRUE) %>% 
-        dplyr::mutate(p_bintest = NA) %>% 
+      callFiles <- read.table(file.path(outputFolder, paste0("calls/", s, ".call.cns")), header = TRUE) %>%
+        dplyr::mutate(p_bintest = NA) %>%
         dplyr::relocate(p_bintest, .after = depth)
       callBinFiles <- read.table(file.path(outputFolder, paste0("calls/", s, "bintest.call.cns")), header = TRUE)
       sam <- rbind(callFiles, callBinFiles)
@@ -230,7 +231,7 @@ for (name in names(datasets)) {
 
     #Read the bed file and pass cnv results to a GRanges object
     bedGR <- regioneR::toGRanges(bedFile)
-    resultsGR <- regioneR::toGRanges(cnvData %>% 
+    resultsGR <- regioneR::toGRanges(cnvData %>%
                                        as.data.frame())
 
     # Create a dataframe to store results with the associated gene
@@ -244,10 +245,10 @@ for (name in names(datasets)) {
       res <- as.data.frame(IRanges::subsetByOverlaps(bedGR, cnvGR)) %>%
         dplyr::mutate(CNV.type = cnvGR$CNV.type,
                       log2 = cnvGR$log2,
-                      cn = cnvGR$cn,                  
+                      cn = cnvGR$cn,
                       Sample = resultsGR$Sample[i]) %>%
         dplyr::group_by(name, Sample, seqnames, CNV.type) %>%
-        dplyr::summarise(start_gene = min(start), 
+        dplyr::summarise(start_gene = min(start),
                          end_gene = max (end),
                          cn = min(cn),
                          log2 = min(log2))
@@ -264,10 +265,10 @@ for (name in names(datasets)) {
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "name",
                         sampleColumn = "Sample", chrColumn = "seqnames", startColumn = "start_gene",
                         endColumn = "end_gene", cnvTypeColumn = "CNV.type")
-    
+
     ##Temporary files----
     #Delete temporary files if specified
-    if(includeTempFiles == "false"){
+    if(keepTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value=TRUE))])
