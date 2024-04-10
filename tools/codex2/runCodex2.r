@@ -1,11 +1,11 @@
 # Runs codex2 over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runCodex2.r [codex2_params_file] [datasets_params_file] [include_temp_files]
+#USAGE: Rscript runCodex2.r [codex2_params_file] [datasets_params_file] [keepTempFiles]
+# keepTempFiles: if true, temp files will not be removed (Default: true)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 suppressPackageStartupMessages(library(CODEX2))
 source(if (basename(getwd()) == "optimizers") "../utils/segment_targeted.R" else "utils/segment_targeted.R") # Load utils functions
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
-
 
 #Functions----
 # translates del/dup to deletion/duplication
@@ -152,11 +152,11 @@ print(args)
 if(length(args)>0) {
   codex2ParamsFile <- args[1]
   datasetsParamsFile <- args[2]
-  includeTempFiles <- args[3]
+  keepTempFiles <- args[3]
 } else {
   codex2ParamsFile <- "codex2Params.yaml"
   datasetsParamsFile <- "../../datasets.yaml"
-  includeTempFiles <- "true"
+  keepTempFiles <- "true"
 }
 
 ## Load the parameters file----
@@ -192,7 +192,7 @@ for (name in names(datasets)) {
     # Do pre-calc part of the algorithm
     if (is.null(params$execution) || params$execution != "skipPrecalcPhase") {
 
-      
+
       # get bam directories, read in bed file, get sample names
       sampname <- as.matrix(unlist(strsplit(files,"\\.bam")))
       bambedObj <- CODEX2::getbambed(bamdir = files,
@@ -213,9 +213,9 @@ for (name in names(datasets)) {
       ## Get depth of coverage----
       coverageObj <- getcoverage(bambedObj, mapqthres = 20)
       Y <- coverageObj$Y
-      
+
       ## Quality control----
-      
+
       qcObj <- qc(Y, sampname, ref, cov_thresh = c(20, Inf),
                   length_thresh = c(20, Inf), mapp_thresh = 0.9,
                   gc_thresh = c(20, 80))
@@ -223,7 +223,7 @@ for (name in names(datasets)) {
       Y_qc <- qcObj$Y_qc; sampname_qc <- qcObj$sampname_qc
       ref_qc <- qcObj$ref_qc; qcmat <- qcObj$qcmat; gc_qc <- ref_qc$gc
 
-      
+
       ## Estimating library size factor for each sample----
       Y.nonzero <- Y_qc[apply(Y_qc, 1, function(x){!any(x==0)}),]
       pseudo.sample <- apply(Y.nonzero,1,function(x){exp(1/length(x)*sum(log(x)))})
@@ -240,7 +240,7 @@ for (name in names(datasets)) {
       AIC <- normObj.null$AIC; BIC <- normObj.null$BIC
       RSS <- normObj.null$RSS
 
-      
+
       ## CBS segmentation per gene: optinmal for targeted seq----
       #source('segment_targeted.R')
       # Available at: https://github.com/yuchaojiang/CODEX2/blob/master/targeted_sequencing/segment_targeted.R
@@ -251,7 +251,7 @@ for (name in names(datasets)) {
                             'st_exon','ed_exon','raw_cov',
                             'norm_cov','copy_no','lratio',
                             'mBIC')
-      
+
       for(genei in unique(ref_qc$gene)){
         cat('Segmenting gene',genei,'\n')
         geneindex = which(ref_qc$gene == genei)
@@ -261,11 +261,11 @@ for (name in names(datasets)) {
         finalcalli = segment_targeted(yi, yhati, sampname_qc, refi, genei, lmax=length(geneindex), mode='fraction')
         finalcall = rbind(finalcall,finalcalli)
       }
-     
+
       cn <- (as.numeric(as.matrix(finalcall[,'copy_no'])))
       cn.filter <- (cn <= params$cn_del_factor) | (cn >= params$cn_dup_factor)
       finalcall <- finalcall[cn.filter,]
-      
+
       ## Set right sample name and cnv naming----
       for (i in 1:nrow(finalcall)){
         parts <- strsplit(finalcall[i, "sample_name"], "/")[[1]]
