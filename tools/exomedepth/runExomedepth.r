@@ -6,6 +6,8 @@ suppressPackageStartupMessages(library(ExomeDepth))
 library(methods)
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 
+
+#Functions----
 # returns gene for position matching ROI in bed data
 auxGetGene <- function(bedData, chr, pos){
   gene <- bedData[bedData$chr == chr & (pos >= bedData$start & pos <= bedData$end),"gene"]
@@ -80,6 +82,8 @@ processExomedepthBody <- function(testCountsDF, controlCountsDF, countsDef, para
 }
 
 
+#Get parameters----
+## Read args----
 # Read args
 args <- commandArgs(TRUE)
 print(args)
@@ -93,14 +97,15 @@ if(length(args)>0) {
   includeTempFiles <- "true"
 }
 
-#Load the parameters file
+##Load the parameters file----
 params <- yaml.load_file(exomedepthParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
 
 # print params
 print(paste("Params for this execution:", list(params)))
+print(paste("Datasets for this execution:", list(datasets)))
 
-
+# Dataset iteration ----
 # go over datasets and run ExomeDepth for those which are active
 for (name in names(datasets)) {
 
@@ -134,11 +139,12 @@ for (name in names(datasets)) {
     outputFile <- file.path(outputFolder, "all_cnv_calls.txt")
     failedRegionsFile <- file.path(outputFolder, "failedROIs.csv")
 
-    # Do pre-calc part of the algorithm
+    ##run ExomeDepth----
+    ### Do pre-calc part of the algorithm----
     if (is.null(params$execution) || params$execution != "skipPrecalcPhase") {
 
       # read bam counts
-      bamFiles <- list.files(bamsDir, "*.bam$", full.names=T)
+      bamFiles <- list.files(bamsDir, "*.bam$", full.names = TRUE)
       counts <- getBamCounts(bed.file = bedFile,
                              bam.files = bamFiles,
                              read.width = readLength,
@@ -166,11 +172,11 @@ for (name in names(datasets)) {
       countsDF <- readRDS(file.path(params$precalcFolder, "countsDF.rds"))
     }
 
-    # Process each sample
+    ### Process each sample----
     all <- data.frame()
 
     if (!is.null(dataset$clinical_indication) && dataset$clinical_indication != ""){
-      sample_indications <- read.table(dataset$clinical_indication, header = T, sep = "\t", stringsAsFactors=F)[,c(1,2)]
+      sample_indications <- read.table(dataset$clinical_indication, header = T, sep = "\t", stringsAsFactors = FALSE)[,c(1,2)]
       sample_indications <- sample_indications[sample_indications$Genes != "" & sample_indications$Genes != " ", ] # remove empty items
       indicationsComp <- readCompatibleIndications(dataset$clinical_indication) # get compatible indications for each indication
 
@@ -206,29 +212,31 @@ for (name in names(datasets)) {
                                    params = params)
     }
 
-    # write results
-    write.table(all, file = outputFile, sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
+    # Save results----
+    ##TXT file----
+    write.table(all, file = outputFile, sep = '\t', row.names = FALSE, col.names = TRUE, quote = FALSE)
 
-    df <- read.table(outputFile,sep="\t", stringsAsFactors=FALSE, header = TRUE) # REMOVE
+    df <- read.table(outputFile, sep = "\t", stringsAsFactors = FALSE, header = TRUE) # REMOVE
 
-    # Save results in GRanges format
+    ##GenomicRanges object----
     message("Saving GenomicRanges results")
     saveResultsFileToGR(outputFolder, "all_cnv_calls.txt", chrColumn = "chromosome", sampleColumn = "sample",
                         startColumn = "start", endColumn = "end", cnvTypeColumn = "type")
 
-    # Save empty failed regions (not available in this algorithm)
+    ## Save empty failed regions (not available in this algorithm)----
     fr <- data.frame(matrix(ncol = 5, nrow = 0))
     colnames(fr) <- c("SampleID", "Chr", "Start", "End", "Gene")
-    write.table(fr, failedRegionsFile, sep="\t", row.names=FALSE, quote = FALSE)
+    write.table(fr, failedRegionsFile, sep = "\t", row.names = FALSE, quote = FALSE)
 
-    print(paste("ExomeDepth for", name, "dataset finished", sep=" "))
+    print(paste("ExomeDepth for", name, "dataset finished", sep = " "))
     cat("\n\n\n")
 
+    #Temporary files
     #Delete temporary files if specified
     if(includeTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
-      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
+      filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
       do.call(unlink, filesToRemove)
     }
   }
