@@ -1,39 +1,46 @@
 # Runs viscap over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runVisCap.R [cobalt_params_file] [datasets_params_file] [include_temp_files]
+#USAGE: Rscript runVisCap.R [viscap_params_file] [datasets_params_file] [keepTempFiles] [evaluateParameters]
+# keepTempFiles: if true, temp files will not be removed (Default: true)
+# evalulateParameters: if true, DoC will not be computed (Default: false)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 library(dplyr)
 library(stringr)
 
-# Read args
+
+#Get parameters----
+## Read args----
 args <- commandArgs(TRUE)
 print(args)
 if(length(args)>0) {
   viscapParamsFile <- args[1]
   datasetsParamsFile <- args[2]
-  includeTempFiles <- args[3]
+  keepTempFiles <- args[3]
   evaluateParameters <- args[4]
 } else {
   viscapParamsFile <- "tools/viscap/viscapParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
-  includeTempFiles <- "true"
+  keepTempFiles <- "true"
   evaluateParameters <- "false"
 }
 
 
-#Load the parameters file
+##Load the parameters file----
 params <- yaml.load_file(viscapParamsFile)
 datasets <- yaml.load_file(datasetsParamsFile)
+# print params
 print(paste("Params for this execution:", list(params)))
+print(paste("Datasets for this execution:", list(datasets)))
 
-#Get folder names
+
+#Get viscap folder names----
 currentFolder <- getwd()
 viscapFolder <- file.path(params$viscapFolder)
 gatkFolder <- file.path(params$gatkFolder)
 
 
-
+# Dataset iteration ----
 # go over datasets and run viscap for those which are active
 for (name in names(datasets)) {
   dataset <- datasets[[name]]
@@ -44,7 +51,7 @@ for (name in names(datasets)) {
     bamsDir <- file.path(dataset$bams_dir)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
-   
+
 
     # Create output folder
     if (!is.null(params$outputFolder)) {
@@ -59,10 +66,8 @@ for (name in names(datasets)) {
 
 
     #create input files required for running GATK
- 
 
-
-    #Depth of coverage (DOC)
+    ##Depth of coverage (DOC)----
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     depthCoverageFolder <- ifelse(evaluateParameters=="false",
                                   file.path(outputFolder, "DepthOfCoverage"),
@@ -87,7 +92,7 @@ for (name in names(datasets)) {
     #need to enter to the folder where viscap config is stored
     setwd(outputFolder)
 
-    #Create a cfg file with all the parameters to use
+    ##Create a cfg file with all the parameters to use----
     viscapConfig<- file.path(outputFolder, "VisCap.cfg")
     cfg <- data.frame(V1=c("#VisCap configuration file for Linux users"))
     cfg <- cfg %>%
@@ -112,7 +117,7 @@ for (name in names(datasets)) {
       outputFolder1 <- outputFolder
     }
 
-#Run Viscap
+    ##Run Viscap----
     cmd <- paste("Rscript", file.path(viscapFolder, "VisCap.R"),
                  depthCoverageFolder,
                  outputFolder1,
@@ -176,24 +181,23 @@ for (name in names(datasets)) {
     }
 
     # Save results----
-    # Print results in a tsv file
+    ## TSV file----
     finalSummaryFile <- file.path(outputFolder, "cnvs_summary.tsv")
     write.table(resGenes, finalSummaryFile, sep = "\t", quote = F, row.names = F)
-    # Save results in a GenomicRanges object
-    message("Saving CNV GenomicRanges results")
 
+    ## GenomicRanges object----
+    message("Saving CNV GenomicRanges results")
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "name",
                         sampleColumn = "Sample", chrColumn = "seqnames", startColumn = "start_gene",
                         endColumn = "end_gene", cnvTypeColumn = "copy_number")
 
-
+    ## Temporary files----
     #Delete temporary files if specified
-    if(includeTempFiles == "false"){
+    if(keepTempFiles == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive=TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse= "|"), filesAll, value=TRUE))])
       do.call(unlink, filesToRemove)
     }
   }
-
 }
