@@ -1,4 +1,4 @@
-#USAGE: Rscript setUpFolders.R [-t tools_yaml]  [-d dataset_yaml] (call from main folder)
+#USAGE: Rscript evaluate_parameters/setUpFolders.R [-t tools_yaml]  [-d dataset_yaml] (call from main folder)
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 library(methods)
