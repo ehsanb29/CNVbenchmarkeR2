@@ -1,5 +1,5 @@
 # Runs clearCNV over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runclearCNV.R [clearCNV_params_file] [datasets_params_file] [include_temp_files]
+#USAGE: Rscript runclearCNV.R [clearCNV_params_file] [datasets_params_file] [keepTempFiles]
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
@@ -12,11 +12,11 @@ print(args)
 if(length(args)>0) {
   clearCNVParamsFile <- args[1]
   datasetsParamsFile <- args[2]
-  includeTempFiles <- args[3]
+  keepTempFiles <- args[3]
 } else {
   clearCNVParamsFile <- "tools/clearCNV/clearCNVParams.yaml"
   datasetsParamsFile <- "datasets.yaml"
-  includeTempFiles <- "true"
+  keepTempFiles  <- "true"
 }
 
 ##Load the parameters files----
@@ -96,10 +96,10 @@ for (name in names(datasets)) {
     saveResultsFileToGR(outputFolder, basename(finalSummaryFile), geneColumn = "gene",
                         sampleColumn = "sample", chrColumn = "chr", startColumn = "start",
                         endColumn = "end", cnvTypeColumn = "CNV.type")
-    
+
     ## Temporary files----
     #Delete temporary files if specified
-    if(includeTempFiles == "false"){
+    if(keepTempFiles  == "false"){
       filesAll <- list.files(outputFolder, full.names = TRUE, recursive = TRUE)
       filesToKeep <- c("failedROIs.csv", "grPositives.rds", "cnvs_summary.tsv", "cnvFounds.csv", "cnvFounds.txt", "all_cnv_calls.txt", "calls_all.txt", "failures_Failures.txt", "cnv_calls.tsv")
       filesToRemove <- list(filesAll[!(filesAll %in% grep(paste(filesToKeep, collapse = "|"), filesAll, value = TRUE))])
