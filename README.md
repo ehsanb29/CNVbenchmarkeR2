@@ -73,19 +73,23 @@ An SGE cluster system has to be available.
 ### Run evaluate parameters
 1. Configure all the steps needed to run the benckmark (expained in section how to use)
 
-2. Run the setUpFolders script to create the subfolders that will contain the YAML files defining the settings values to be used for each execution.This step should be performed in the CNVbenchmarkeR2 folder.
-
+2. Before running any evaluations, you need to create subfolders  that will contain the YAML files. These files define the settings values for each execution. Execute the setUpFolders script from the CNVbenchmarkeR2 directory.
 ``` 
 Rscript evaluate_parameters/setUpFolders.R [-t tools_yaml] [-d datasets_yaml]
 ```
-3. Execute the runEvaluate script. This step should be performed in the CNVbenchmarkeR2 folder.
+3. Execute the runEvaluate script. This process involves calculating the values for each modified parameter within the selected tools and datasets. For parameters not explicitly modified, the script will apply default values. Execute the setUpFolders script from the CNVbenchmarkeR2 directory.
 
 ```
-Rscript evaluate_parameters/runEvaluate.R [-t tools_file] [-d datasets_file] [-f include_temp_files]
+Rscript evaluate_parameters/runEvaluate.R [-t tools_file] [-d datasets_file] [-f keepTempFiles]
 
 ```
 For space optimization, it is recommended to set the -f parameter to false, which deletes all intermediate files.
 
 
+4. After the evaluation completes, generate summary CSV files for a comprehensive overview. Again, ensure you are in the CNVbenchmarkeR2 directory and run the summaryEvaluate script:
+```
+Rscript evaluate_parameters/summaryEvaluate.R [-t tools_file] [-d datasets_file]
 
+```
+Each CSV file will contain a summary for every parameter in each dataset, stored in the following path: evaluate_parameters/tool/dataset/parameter/results-dataset_tool_param.csv.
 
