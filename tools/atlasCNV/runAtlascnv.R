@@ -1,6 +1,8 @@
 # Runs Atlas-CNV over the datasets cofigured at [datasets_params_file]
-#USAGE: Rscript runAtlasCNV.R [atlasCNVparams_file] [datasets_params_file] [include_temp_files] [evaluate_parameters]
+#USAGE: Rscript runAtlasCNV.R [atlasCNVparams_file] [datasets_params_file] [keepTempFiles] [evaluateParameters]
 # keepTempFiles: if true, temp files will not be removed (Default: true)
+# evalulateParameters: if true, DoC will not be computed (Default: false)
+
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
