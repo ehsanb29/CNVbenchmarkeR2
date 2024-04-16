@@ -58,7 +58,7 @@ for (name in names(datasets)) {
       outputFolder <- file.path(getwd(), "output", paste0("atlasCNV-", name))
     }
 
-    unlink(outputFolder, recursive = TRUE);
+    #unlink(outputFolder, recursive = TRUE);
     dir.create(outputFolder, showWarnings = FALSE)
 
     # extract fields
@@ -66,7 +66,7 @@ for (name in names(datasets)) {
     bamFiles <- list.files(bamsDir, pattern = '*.bam$', full.names = TRUE)
     bedFile <- file.path(dataset$bed_file)
     fastaFile <- file.path(dataset$fasta_file)
-    
+
     ## Input files for Atlas-CNV ----
 
     ### Panel file ----
@@ -81,7 +81,7 @@ for (name in names(datasets)) {
       dplyr::mutate(RefSeq = V4) %>%
       dplyr::select(-starts_with("V"))
     panel$Gene_Exon <- ave(panel$Gene_Exon, panel$Gene_Exon, FUN = function(i) paste0(i, '_', seq_along(i)))
-    
+
     #export panel file
     write.table(panel, file = paste0(outputFolder,'/panel',name,'.txt'),sep = "\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
 
@@ -91,39 +91,35 @@ for (name in names(datasets)) {
     sample <- tempSample %>%
       dplyr::mutate(sex = "F") %>%
       dplyr::mutate(mp = name)
-    
+
     #export sample file
     write.table(sample, file = paste0(outputFolder,'/', name, '.sample'), sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
     #Remove intermediate files
     rm(tempSample, tempBed)
-    
+
     ### Depth of Coverage----
     #create Depth of coverage folder (DOC)
     depthCoverageFolder <- ifelse(evaluateParameters == "false",
                                   file.path(outputFolder, "DepthOfCoverage"),
                                   paste0(currentFolder, "/evaluate_parameters/atlasCNV/", name, "/DepthOfCoverage"))
-
     #Check if DOC folder exists to skip this step
     if(!dir.exists(depthCoverageFolder)| dir.exists(depthCoverageFolder) &&  length(list.files(depthCoverageFolder))<7){
     #if it doesn't exist it calculates DOC
     dir.create(depthCoverageFolder, showWarnings = FALSE)
 
     #get depth of coverage for each BAM file, using GATK
-    for (bam in bamFiles){
-      bam <- basename(bamFiles) %>% 
-        tools::file_path_sans_ext()
-      for (i in seq_len(length(bamFiles))){
-        cmd <- paste(file.path(gatkFolder, "gatk"),  "DepthOfCoverage",
+    bam <- basename(bamFiles) %>% tools::file_path_sans_ext()
+    for (i in seq_len(length(bamFiles))){
+      cmd <- paste(file.path(gatkFolder, "gatk"),  "DepthOfCoverage",
                      "-R",  fastaFile,
                      "-I", bamFiles[i],
                      "-O",  file.path(depthCoverageFolder, paste0(bam[i], ".DATA")),
                      "--output-format", "TABLE",
                      "-L", bedFile)
-        print(cmd);system(cmd)
-        }
+      print(cmd);system(cmd)
       }
     }
-    
+
     ##Run atlasCNV----
     print("run atlasCNV")
     setwd(outputFolder)
@@ -151,10 +147,10 @@ for (name in names(datasets)) {
     #merge cnv output files and modify columns
     resDF <- list.files(name, pattern = "\\.cnv", recursive = TRUE, full.names = TRUE)  %>%
       purrr::set_names(basename) %>%
-      purrr::map(read.delim) %>% 
-      rlist::list.rbind() %>% 
+      purrr::map(read.delim) %>%
+      rlist::list.rbind() %>%
       as.data.frame() %>%
-      tibble::rownames_to_column(var = "sample") %>% 
+      tibble::rownames_to_column(var = "sample") %>%
       dplyr::mutate(sample = stringr::str_replace_all(sample, ".cnv.FAILED_sampleQC_and_sampleANOVA.[0-9]+|.cnv.FAILED_sampleANOVA.[0-9]+|.cnv..FAILED_sampleQC.[0-9]+|.cnv.FAILED_sampleQC.[0-9]|.cnv.FAILED_sampleANOVA|.cnv.[0-9]+|.cnv","")) %>%
       dplyr::rename( "gene" = "Gene_Exon") %>%
       tidyr::separate(Exon_Target, c("chr", "start","end")) %>%
