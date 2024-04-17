@@ -263,7 +263,7 @@ for (name in names(datasets)) {
       }
 
       cn <- (as.numeric(as.matrix(finalcall[,'copy_no'])))
-      cn.filter <- (cn <= params$cn_del_factor) | (cn >= params$cn_dup_factor)
+      cn.filter <- (cn <= params$cn_del_threshold) | (cn >= params$cn_dup_threshold)
       finalcall <- finalcall[cn.filter,]
 
       ## Set right sample name and cnv naming----
