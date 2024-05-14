@@ -20,9 +20,9 @@ Tools should be properly installed. Links for tools installation:
 - [Cobalt](https://github.com/ARUP-NGS/cobalt)
 - [CNVkit](https://github.com/etal/cnvkit)
 - [VisCap](https://github.com/pughlab/VisCap)
-- [GATK-gCNV (GermlineCNVCaller)](https://hub.docker.com/r/broadinstitute/gatk) (At the moment, it only works using [singularity](https://docs.sylabs.io/guides/3.0/user-guide/installation.html)).
+- [GATK-gCNV (GermlineCNVCaller)](https://hub.docker.com/r/broadinstitute/gatk) (At the moment, it only works using singularity).
 
-Also, R/Bioconductor should be installed with at least this packages: GenomicRanges, biomaRt, regioneR, vcfR.
+Also, R/Bioconductor should be installed including these packages: GenomicRanges, biomaRt, regioneR, vcfR.
 
 ### How to use
 1. Get Code
@@ -62,8 +62,8 @@ Two important checks to ensure that metrics are computed correctly:
 
 
 ## Extra feature: evaluate parameters ##
-A parameter evaluator is also attached in the framework. It executes each tool parameter over a broad range of values to assess its impact on tool performance. Up to 15 values are evaluated for each numerical param and all the available options for categorical ones. 
-The parameter evaluator empowers users to gain deeper insights into how individual parameters influence the overall performance of CNV calling tools.
+A parameter evaluator is also included in the framework. It executes each tool parameter over a broad range of values to assess its impact on tool performance. Up to 15 values are evaluated for each numerical param and all the available options for categorical ones. 
+The parameter evaluator facilitates understanding how individual parameters influence the overall performance of CNV calling tools.
 
 
 ### Prerequisites ###
