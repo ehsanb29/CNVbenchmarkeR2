@@ -4,7 +4,6 @@
 print(paste("Starting at", startTime <- Sys.time()))
 suppressPackageStartupMessages(library(yaml))
 suppressPackageStartupMessages(library(CODEX2))
-source(if (basename(getwd()) == "optimizers") "../utils/segment_targeted.R" else "utils/segment_targeted.R") # Load utils functions
 source(if (basename(getwd()) == "optimizers") "../utils/utils.r" else "utils/utils.r") # Load utils functions
 
 #Functions----
@@ -15,6 +14,7 @@ auxCNname <- function(x) {
 }
 
 # Functions that need to be adapted
+#available at https://github.com/yuchaojiang/CODEX2/blob/master/targeted_sequencing/segment_targeted.R
 segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, lmax, mode) {
   chri <- as.matrix(seqnames(refi))[1]
   finalcall <- matrix(ncol = 10)
@@ -120,6 +120,8 @@ segment_targeted <- function(yi, yhati, sampname_qc, refi, genei, lmax, mode) {
   rownames(finalcall) <- rep("", nrow(finalcall))
   finalcall
 }
+
+
 getgc =function (ref, genome = NULL) {
   if(is.null(genome)){genome=BSgenome.Hsapiens.UCSC.hg19}
   gc=rep(NA,length(ref))
@@ -216,9 +218,11 @@ for (name in names(datasets)) {
 
       ## Quality control----
 
-      qcObj <- qc(Y, sampname, ref, cov_thresh = c(20, Inf),
-                  length_thresh = c(20, Inf), mapp_thresh = 0.9,
-                  gc_thresh = c(20, 80))
+      qcObj <- qc(Y, sampname, ref,
+                  cov_thresh = c(params$cov_thresh_down, params$cov_thresh_up),
+                  length_thresh =c(params$length_thresh_down, params$length_thresh_up),
+                  mapp_thresh = params$mapp_thresh,
+                  gc_thresh = c(params$gc_thresh_down, params$gc_thresh_up))
 
       Y_qc <- qcObj$Y_qc; sampname_qc <- qcObj$sampname_qc
       ref_qc <- qcObj$ref_qc; qcmat <- qcObj$qcmat; gc_qc <- ref_qc$gc
