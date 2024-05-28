@@ -5,6 +5,5 @@ length_thresh_up: 2000
 mapp_thresh: 0.9
 gc_thresh_down: 20
 gc_thresh_up: 80
-sample_reads_median_limit: 50
 cn_del_threshold: 1.7
 cn_dup_threshold: 2.3
