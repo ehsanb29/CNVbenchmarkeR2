@@ -22,7 +22,7 @@ Tools should be properly installed. Links for tools installation:
 - [VisCap](https://github.com/pughlab/VisCap)
 - [GATK-gCNV (GermlineCNVCaller)](https://hub.docker.com/r/broadinstitute/gatk) (At the moment, it only works using singularity).
 
-Also, R/Bioconductor should be installed including these packages: GenomicRanges, biomaRt, regioneR, vcfR.
+Also, R/Bioconductor should be installed including these packages: GenomicRanges, biomaRt, regioneR, vcfR, optparse.
 
 ### How to use
 1. Get Code
@@ -77,7 +77,9 @@ An SGE cluster system has to be available.
 ``` 
 Rscript evaluate_parameters/setUpFolders.R [-t tools_yaml] [-d datasets_yaml]
 ```
-3. Execute the runEvaluate script. This process involves calculating the values for each modified parameter within the selected tools and datasets. For parameters not explicitly modified, the script will apply default values. Execute the setUpFolders script from the CNVbenchmarkeR2 directory.
+3. Modify [jobs.sh](https://github.com/jpuntomarcos/CNVbenchmarkeR2/blob/master/evaluate_parameters/job.sh) to set your SGE parameters and paths.
+   
+4. Execute the runEvaluate script. This process involves calculating the values for each modified parameter within the selected tools and datasets. For parameters not explicitly modified, the script will apply default values. Execute the setUpFolders script from the CNVbenchmarkeR2 directory.
 
 ```
 Rscript evaluate_parameters/runEvaluate.R [-t tools_file] [-d datasets_file] [-f keepTempFiles]
@@ -86,7 +88,7 @@ Rscript evaluate_parameters/runEvaluate.R [-t tools_file] [-d datasets_file] [-f
 For space optimization, it is recommended to set the -f parameter to false, which deletes all intermediate files.
 
 
-4. After the evaluation completes, generate summary CSV files for a comprehensive overview. Again, ensure you are in the CNVbenchmarkeR2 directory and run the summaryEvaluate script:
+5. After the evaluation completes, generate summary CSV files for a comprehensive overview. Again, ensure you are in the CNVbenchmarkeR2 directory and run the summaryEvaluate script:
 ```
 Rscript evaluate_parameters/summaryEvaluate.R [-t tools_file] [-d datasets_file]
 
