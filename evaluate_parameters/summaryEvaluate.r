@@ -5,23 +5,23 @@ suppressPackageStartupMessages(library(yaml))
 library(methods)
 library("optparse")
 library("dplyr")
+library("yaml")
+options(scipen = 999)
 
 #Get parameters----
 ## load tools and datasets from yaml files----
-args <- commandArgs(TRUE)
-cat("\n"); print(args)
-if(length(args)>0) {
-  toolsParamsFile <- args[1]
-  datasetsParamsFile <- args[2]
-} else {
-  toolsParamsFile <- "tools.yaml"
-  datasetsParamsFile <- "datasets.yaml"
-}
 
-setwd("evaluate_parameters")
-#Load the parameters file
-tools <- yaml.load_file(toolsParamsFile)
-datasets <- yaml.load_file(datasetsParamsFile)
+option_list <- list(
+  make_option(c("-t", "--tools"), type="character", default="tools.yaml",
+              help="Path to tools file (yaml)", metavar="character"),
+  make_option(c("-d", "--datasets"), type="character", default="datasets.yaml",
+              help="Path to datasets file (yaml)", metavar="character")
+);
+opt_parser <- OptionParser(option_list=option_list);
+args <- parse_args(opt_parser);
+tools <- yaml.load_file(args$tools)
+datasets <- yaml.load_file(args$datasets)
+
 
 # Run summary evaluate for all datasets and tools----
 for (dName in names(datasets)) {
