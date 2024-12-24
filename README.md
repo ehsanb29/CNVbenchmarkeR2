@@ -4,6 +4,12 @@ CNVbenchmarkeR2 is a framework to benchmark germline copy number variant (CNV) c
 
 Previous version, CNVbenchmarkeR, is available [here](https://github.com/TranslationalBioinformaticsIGTP/CNVbenchmarkeR).
 
+### Citation ###
+
+Please cite [last publication](https://academic.oup.com/bib/article/26/1/bbae645/7922578) when using CNVbenchmarker2:
+
+Elisabet Munté, Carla Roca, Jesús Del Valle, Lidia Feliubadaló, Marta Pineda, Bernat Gel, Elisabeth Castellanos, Barbara Rivera, David Cordero, Víctor Moreno, Conxi Lázaro, José Marcos Moreno-Cabrera, *Detection of germline CNVs from gene panel data: benchmarking the state of the art*, Briefings in Bioinformatics, Volume 26, Issue 1, January 2025, bbae645, https://doi.org/10.1093/bib/bbae645
+
 
 ### Prerequisites ###
 
