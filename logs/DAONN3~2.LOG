@@ -1,7 +1,0 @@
-[1] "Starting at 2025-05-29 20:18:01.112685"
-[1] "/CNV/CNVbenchmarkeR2"
-[1] "tools/decon/deconParams.yaml" "datasets.yaml"               
-[3] "true"                        
-[1] "Params for this execution: list(deconFolder = \"/yourPath/DECoN-1.0.1/Linux\", mincorr = 0.98, mincov = 100, transProb = 0.01)"
-Error in setwd(deconFolder) : cannot change working directory
-Execution halted
