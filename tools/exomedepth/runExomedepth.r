@@ -155,6 +155,8 @@ for (name in names(datasets)) {
 
       # Fix rare bug: sometimes X is added at the beginning of input samples
       parts <- strsplit(bamFiles[1], "/")
+      print("bamFiles:", bamFiles)
+      print("parts:", parts)
       original <- gsub(".bam", "", parts[[1]][length(parts[[1]])])
       if (substr(original, 1, 1) != "X" && substr(names(countsDF)[7], 1, 1) == "X")
         names(countsDF)[7:ncol(countsDF)] <- substring(names(countsDF)[7:ncol(countsDF)] , 2)
@@ -213,11 +215,20 @@ for (name in names(datasets)) {
                                    params = params)
     }
 
+    # check if results were found
+    if (nrow(all) == 0){
+      print(paste("No CNV found for", name, "dataset", sep=" "))
+      cat("\n\n\n")
+      next
+    }
+    else
+      print(paste("All CNV found", all, sep=": "))
+
     # Save results----
     ##TXT file----
     write.table(all, file = outputFile, sep = '\t', row.names = FALSE, col.names = TRUE, quote = FALSE)
 
-    df <- read.table(outputFile, sep = "\t", stringsAsFactors = FALSE, header = TRUE) # REMOVE
+    # df <- read.table(outputFile, sep = "\t", stringsAsFactors = FALSE, header = TRUE) # REMOVE
 
     ##GenomicRanges object----
     message("Saving GenomicRanges results")

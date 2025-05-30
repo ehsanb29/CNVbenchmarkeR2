@@ -1,0 +1,13 @@
+Warning messages:
+1: package 'GenomicRanges' was built under R version 4.4.1 
+2: package 'BiocGenerics' was built under R version 4.4.1 
+3: package 'S4Vectors' was built under R version 4.4.1 
+4: package 'IRanges' was built under R version 4.4.1 
+5: package 'GenomeInfoDb' was built under R version 4.4.1 
+
+[1] "tools.yaml"    "datasets.yaml"
+
+Loading mydataset Dataset validated results
+Error in `[.data.frame`(bedData, , 2) : undefined columns selected
+Calls: <Anonymous> ... getSamplesWithResults -> GRanges -> IRanges -> [ -> [.data.frame
+Execution halted

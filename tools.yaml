@@ -1,13 +1,13 @@
-# define which tools will be run in the benchmark. Set 'true to be included', 'false' to omit
+# define which tools will be run in the benchmark. Set 'false to be included', 'false' to omit
 decon: true
-panelcnmops: true
-convading: true
-exomedepth: true
-clincnv: true
-codex2: true
-cobalt: true
-clearCNV: true
-cnvkit: true
-germlineCNVcaller: true
-viscap: true
-atlasCNV: true
+panelcnmops: false
+convading: false
+exomedepth: false
+clincnv: false
+codex2: false
+cobalt: false
+clearCNV: false
+cnvkit: false
+germlineCNVcaller: false
+viscap: false
+atlasCNV: false

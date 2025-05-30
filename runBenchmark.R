@@ -4,7 +4,7 @@
 # libs
 library("optparse")
 library(yaml)
-start.benchmark <- format(Sys.time(), "%X_%Y")
+start.benchmark <- format(Sys.time(), "%H-%M_%d-%m-%y")
 # Check runBenchmark.R is being called from CNVbenchmarkeR2 folder
 if (length(list.files(pattern = "runBenchmark.R"))== 0){
   cat("Sorry, runBenchmark.R should be called from CNVbenchmarkeR2 folder\n")
@@ -88,6 +88,7 @@ if (tools$convading == T){
 if (tools$decon == T){
   cat(as.character(Sys.time()), " - Executing DECoN\n")
   cmd <- paste("Rscript tools/decon/runDecon.r tools/decon/deconParams.yaml", args$datasets, args$keepTempFiles, " >",  paste0("logs/decon_", start.benchmark, ".log 2>&1"))
+  print(cmd)
   system(cmd)
 }
 
