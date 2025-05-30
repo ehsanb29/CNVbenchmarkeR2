@@ -2,6 +2,3 @@
 logs/
 # Ignore all output files
 output/
-# Ignore all log files
-*.log
-*.LOG
